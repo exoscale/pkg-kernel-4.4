@@ -29,6 +29,4 @@ ibrs+kvm/26-x86-svm-set-ibpb-when-running-a-different-vcpu.patch
 ibrs+kvm/27-kvm-x86-add-speculative-control-cpuid-support-for-guests.patch
 ibrs+kvm/28-x86-svm-clobber-the-rsb-on-vm-exit.patch
 ibrs+kvm/29-x86-svm-add-code-to-clear-registers-on-vm-exit.patch
-ibrs+kvm/30-x86-cpu-amd-make-the-lfence-instruction-serialized.patch
-ibrs+kvm/31-x86-cpu-amd-remove-now-unused-definition-of-mfence_rdtsc-feature.patch
 ibrs+kvm/32-x86-provide-get-scattered-cpuid-leaf.patch
