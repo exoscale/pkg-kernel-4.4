@@ -1,0 +1,56 @@
+From: Tom Lendacky <thomas.lendacky@amd.com>
+Date: Mon, 18 Dec 2017 11:55:18 +0100
+Subject: x86/spec: Check CPUID direclty post microcode reload to support IBPB
+ feature
+Patch-mainline: submitted on 2018/1/9
+References: bsc#1068032
+
+Add an IBPB feature check to the speculative control update check after
+a microcode reload.
+
+Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
+[ Check CPUID directly. ]
+Signed-off-by: Borislav Petkov <bp@suse.de>
+---
+ arch/x86/kernel/cpu/spec_ctrl.c | 18 ++++++++----------
+ 1 file changed, 8 insertions(+), 10 deletions(-)
+
+diff --git a/arch/x86/kernel/cpu/spec_ctrl.c b/arch/x86/kernel/cpu/spec_ctrl.c
+index 9c1ef3795b5b..21dd82c74429 100644
+--- a/arch/x86/kernel/cpu/spec_ctrl.c
++++ b/arch/x86/kernel/cpu/spec_ctrl.c
+@@ -55,18 +55,15 @@ EXPORT_SYMBOL_GPL(stuff_RSB);
+  */
+ void x86_spec_check(void)
+ {
+-	if (boot_cpu_data.x86_vendor == X86_VENDOR_INTEL) {
+-		if (cpuid_edx(7) & BIT(26)) {
+-			ibrs_state = 1;
+-			ibpb_state = 1;
++	if (cpuid_edx(7) & BIT(26)) {
++		ibrs_state = 1;
++		ibpb_state = 1;
+ 
+-			setup_force_cpu_cap(X86_FEATURE_SPEC_CTRL);
+-		}
+-	} else if (boot_cpu_data.x86_vendor == X86_VENDOR_AMD) {
+-		if (boot_cpu_has(X86_FEATURE_SPEC_CTRL))
+-			ibrs_state = 1;
++		setup_force_cpu_cap(X86_FEATURE_SPEC_CTRL);
++	}
+ 
+-		if (boot_cpu_has(X86_FEATURE_IBPB)) {
++	if (boot_cpu_data.x86_vendor == X86_VENDOR_AMD) {
++		if (cpuid_ebx(0x80000008) & BIT(12)) {
+ 			ibpb_state = 1;
+ 		} else {
+ 			switch (boot_cpu_data.x86) {
+@@ -77,6 +74,7 @@ void x86_spec_check(void)
+ 				msr_set_bit(MSR_F15H_IC_CFG, 14);
+ 				break;
+ 			}
++			ibpb_state = 0;
+ 		}
+ 	}
+ }
+

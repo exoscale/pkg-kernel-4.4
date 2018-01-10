@@ -1,0 +1,80 @@
+From: Tom Lendacky <thomas.lendacky@amd.com>
+Date: Mon, 18 Dec 2017 12:23:33 +0100
+Subject: x86/svm: Set IBRS value on VM entry and exit
+Patch-mainline: submitted on 2018/1/9
+References: bsc#1068032
+
+Set/restore the guests IBRS value on VM entry. On VM exit back to the
+kernel save the guest IBRS value and then set IBRS to 1.
+
+Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
+Signed-off-by: Borislav Petkov <bp@suse.de>
+---
+ arch/x86/kvm/svm.c | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+
+Index: kernel/arch/x86/kvm/svm.c
+===================================================================
+--- kernel.orig/arch/x86/kvm/svm.c
++++ kernel/arch/x86/kvm/svm.c
+@@ -37,6 +37,7 @@
+ #include <asm/desc.h>
+ #include <asm/debugreg.h>
+ #include <asm/kvm_para.h>
++#include <asm/spec_ctrl.h>
+ 
+ #include <asm/virtext.h>
+ #include "trace.h"
+@@ -138,6 +139,8 @@ struct vcpu_svm {
+ 
+ 	u64 next_rip;
+ 
++	u64 spec_ctrl;
++
+ 	u64 host_user_msrs[NR_HOST_SAVE_USER_MSRS];
+ 	struct {
+ 		u16 fs;
+@@ -3052,6 +3055,9 @@ static int svm_get_msr(struct kvm_vcpu *
+ 	case MSR_VM_CR:
+ 		msr_info->data = svm->nested.vm_cr_msr;
+ 		break;
++	case MSR_IA32_SPEC_CTRL:
++		msr_info->data = svm->spec_ctrl;
++		break;
+ 	case MSR_IA32_UCODE_REV:
+ 		msr_info->data = 0x01000065;
+ 		break;
+@@ -3171,6 +3177,9 @@ static int svm_set_msr(struct kvm_vcpu *
+ 	case MSR_VM_IGNNE:
+ 		vcpu_unimpl(vcpu, "unimplemented wrmsr: 0x%x data 0x%llx\n", ecx, data);
+ 		break;
++	case MSR_IA32_SPEC_CTRL:
++		svm->spec_ctrl = data;
++		break;
+ 	default:
+ 		return kvm_set_msr_common(vcpu, msr);
+ 	}
+@@ -3809,6 +3818,9 @@ static void svm_vcpu_run(struct kvm_vcpu
+ 
+ 	local_irq_enable();
+ 
++	if (x86_ibrs_enabled() && (svm->spec_ctrl != FEATURE_ENABLE_IBRS))
++		wrmsrl(MSR_IA32_SPEC_CTRL, svm->spec_ctrl);
++
+ 	asm volatile (
+ 		"push %%" _ASM_BP "; \n\t"
+ 		"mov %c[rbx](%[svm]), %%" _ASM_BX " \n\t"
+@@ -3882,6 +3894,12 @@ static void svm_vcpu_run(struct kvm_vcpu
+ #endif
+ 		);
+ 
++	if (x86_ibrs_enabled()) {
++		rdmsrl(MSR_IA32_SPEC_CTRL, svm->spec_ctrl);
++		if (svm->spec_ctrl != FEATURE_ENABLE_IBRS)
++			wrmsrl(MSR_IA32_SPEC_CTRL, FEATURE_ENABLE_IBRS);
++	}
++
+ #ifdef CONFIG_X86_64
+ 	wrmsrl(MSR_GS_BASE, svm->host.gs_base);
+ #else

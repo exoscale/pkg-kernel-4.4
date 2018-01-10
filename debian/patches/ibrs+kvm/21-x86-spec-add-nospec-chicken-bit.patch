@@ -1,0 +1,52 @@
+From: Borislav Petkov <bp@suse.de>
+Date: Sun, 17 Dec 2017 16:45:58 +0100
+Subject: x86/spec: Add "nospec" chicken bit
+Patch-mainline: submitted on 2018/1/9
+References: bsc#1068032
+
+... which disables the speculation features toggle and avoids the
+performance overhead from them.
+
+Carved out from a patch by Tim Chen <tim.c.chen@linux.intel.com>
+
+Signed-off-by: Borislav Petkov <bp@suse.de>
+---
+ Documentation/kernel-parameters.txt |  6 ++++++
+ arch/x86/kernel/cpu/spec_ctrl.c     | 10 ++++++++++
+ 2 files changed, 16 insertions(+)
+
+Index: kernel/Documentation/kernel-parameters.txt
+===================================================================
+--- kernel.orig/Documentation/kernel-parameters.txt
++++ kernel/Documentation/kernel-parameters.txt
+@@ -2446,6 +2446,12 @@ bytes respectively. Such letter suffixes
+ 	nosmep		[X86]
+ 			Disable SMEP (Supervisor Mode Execution Prevention)
+ 			even if it is supported by processor.
++			
++	nospec		[X86]
++			Disable indirect branch restricted speculation and
++			indirect branch prediction barrier to avoid performance
++			penalties in trusted environments.
++
+ 
+ 	noexec32	[X86-64]
+ 			This affects only 32-bit executables.
+Index: kernel/arch/x86/kernel/cpu/spec_ctrl.c
+===================================================================
+--- kernel.orig/arch/x86/kernel/cpu/spec_ctrl.c
++++ kernel/arch/x86/kernel/cpu/spec_ctrl.c
+@@ -65,3 +65,13 @@ void x86_spec_check(void)
+ 	}
+ }
+ EXPORT_SYMBOL_GPL(x86_spec_check);
++
++static int __init nospec(char *str)
++{
++	setup_clear_cpu_cap(X86_FEATURE_SPEC_CTRL);
++	ibrs_state = 0;
++	ibpb_state = 0;
++
++	return 0;
++}
++early_param("nospec", nospec);

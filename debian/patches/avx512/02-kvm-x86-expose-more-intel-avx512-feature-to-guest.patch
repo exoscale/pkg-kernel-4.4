@@ -1,0 +1,36 @@
+From: Luwei Kang <luwei.kang@intel.com>
+Date: Tue, 2 Aug 2016 16:01:18 +0800
+Subject: KVM: x86: Expose more Intel AVX512 feature to guest
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+Patch-mainline: v4.9-rc1
+Git-commit: 8e3562f6f8d28804b5499bf3cff520598aa25323
+References: bsc#1035611
+
+Expose AVX512DQ, AVX512BW, AVX512VL feature to guest.
+Its spec can be found at:
+https://software.intel.com/sites/default/files/managed/b4/3a/319433-024.pdf
+
+Signed-off-by: Luwei Kang <luwei.kang@intel.com>
+[Resolved a trivial conflict with removed F(PCOMMIT).]
+Signed-off-by: Radim Krčmář <rkrcmar@redhat.com>
+Acked-by: Bruce Rogers <brogers@suse.com>
+---
+ arch/x86/kvm/cpuid.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+Index: kernel/arch/x86/kvm/cpuid.c
+===================================================================
+--- kernel.orig/arch/x86/kvm/cpuid.c
++++ kernel/arch/x86/kvm/cpuid.c
+@@ -355,7 +355,8 @@ static inline int __do_cpuid_ent(struct
+ 		F(FSGSBASE) | F(BMI1) | F(HLE) | F(AVX2) | F(SMEP) |
+ 		F(BMI2) | F(ERMS) | f_invpcid | F(RTM) | f_mpx | F(RDSEED) |
+ 		F(ADX) | F(SMAP) | F(AVX512F) | F(AVX512PF) | F(AVX512ER) |
+-		F(AVX512CD) | F(CLFLUSHOPT) | F(CLWB) | F(PCOMMIT);
++		F(AVX512CD) | F(CLFLUSHOPT) | F(CLWB) | F(AVX512DQ) |
++		F(AVX512BW) | F(AVX512VL) | F(PCOMMIT);
+ 
+ 	/* cpuid 0xD.1.eax */
+ 	const u32 kvm_supported_word10_x86_features =

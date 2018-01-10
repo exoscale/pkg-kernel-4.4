@@ -1,0 +1,28 @@
+From: Tom Lendacky <thomas.lendacky@amd.com>
+Date: Mon, 18 Dec 2017 13:06:12 +0100
+Subject: x86/svm: Clobber the RSB on VM exit
+Patch-mainline: submitted on 2018/1/9
+References: bsc#1068032
+
+Overwrite the local CPU RSB entries from the previous less privileged
+mode.
+
+Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
+Signed-off-by: Borislav Petkov <bp@suse.de>
+---
+ arch/x86/kvm/svm.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+Index: kernel/arch/x86/kvm/svm.c
+===================================================================
+--- kernel.orig/arch/x86/kvm/svm.c
++++ kernel/arch/x86/kvm/svm.c
+@@ -3914,6 +3914,8 @@ static void svm_vcpu_run(struct kvm_vcpu
+ 			wrmsrl(MSR_IA32_SPEC_CTRL, FEATURE_ENABLE_IBRS);
+ 	}
+ 
++	stuff_RSB();
++
+ #ifdef CONFIG_X86_64
+ 	wrmsrl(MSR_GS_BASE, svm->host.gs_base);
+ #else

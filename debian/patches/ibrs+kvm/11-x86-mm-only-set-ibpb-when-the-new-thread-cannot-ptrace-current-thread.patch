@@ -1,0 +1,40 @@
+From: Tim Chen <tim.c.chen@linux.intel.com>
+Date: Sat, 16 Dec 2017 18:37:19 +0100
+Subject: x86/mm: Only set IBPB when the new thread cannot ptrace current thread
+Patch-mainline: submitted on 2018/1/9
+References: bsc#1068032
+
+To reduce overhead of setting IBPB, we only do that when the new thread
+cannot ptrace the current one. If the new thread has ptrace capability
+on current thread, it is safe.
+
+Signed-off-by: Tim Chen <tim.c.chen@linux.intel.com>
+Signed-off-by: Borislav Petkov <bp@suse.de>
+---
+ arch/x86/mm/tlb.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+Index: kernel/arch/x86/mm/tlb.c
+===================================================================
+--- kernel.orig/arch/x86/mm/tlb.c
++++ kernel/arch/x86/mm/tlb.c
+@@ -7,6 +7,7 @@
+ #include <linux/module.h>
+ #include <linux/cpu.h>
+ #include <linux/debugfs.h>
++#include <linux/ptrace.h>
+ 
+ #include <asm/tlbflush.h>
+ #include <asm/mmu_context.h>
+@@ -99,7 +100,10 @@ void switch_mm(struct mm_struct *prev, s
+ 	unsigned cpu = smp_processor_id();
+ 
+ 	if (likely(prev != next)) {
+-		x86_ibp_barrier();
++
++		/* Null tsk means switching to kernel, so that's safe */
++		if (tsk && ___ptrace_may_access(tsk, current, PTRACE_MODE_IBPB))
++			x86_ibp_barrier();
+ 
+ #ifdef CONFIG_SMP
+ 		this_cpu_write(cpu_tlbstate.state, TLBSTATE_OK);

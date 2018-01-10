@@ -1,0 +1,29 @@
+From: Tom Lendacky <thomas.lendacky@amd.com>
+Date: Mon, 18 Dec 2017 12:06:31 +0100
+Subject: KVM: SVM: Do not intercept new speculative control MSRs
+Patch-mainline: submitted on 2018/1/9
+References: bsc#1068032
+
+Allow guest access to the speculative control MSRs without being
+intercepted.
+
+Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
+Signed-off-by: Borislav Petkov <bp@suse.de>
+---
+ arch/x86/kvm/svm.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+Index: kernel/arch/x86/kvm/svm.c
+===================================================================
+--- kernel.orig/arch/x86/kvm/svm.c
++++ kernel/arch/x86/kvm/svm.c
+@@ -181,6 +181,8 @@ static const struct svm_direct_access_ms
+ 	{ .index = MSR_CSTAR,				.always = true  },
+ 	{ .index = MSR_SYSCALL_MASK,			.always = true  },
+ #endif
++	{ .index = MSR_IA32_SPEC_CTRL,			.always = true },
++	{ .index = MSR_IA32_PRED_CMD,			.always = true },
+ 	{ .index = MSR_IA32_LASTBRANCHFROMIP,		.always = false },
+ 	{ .index = MSR_IA32_LASTBRANCHTOIP,		.always = false },
+ 	{ .index = MSR_IA32_LASTINTFROMIP,		.always = false },

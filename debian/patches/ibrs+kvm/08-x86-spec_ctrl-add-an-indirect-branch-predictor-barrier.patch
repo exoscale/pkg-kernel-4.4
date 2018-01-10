@@ -1,0 +1,33 @@
+From: Borislav Petkov <bp@suse.de>
+Date: Sat, 16 Dec 2017 18:18:34 +0100
+Subject: x86/spec_ctrl: Add an Indirect Branch Predictor barrier
+Patch-mainline: submitted on 2018/1/9
+References: bsc#1068032
+
+... to call when code is context-switching to a separate address space
+and needs to prevent earlier code from having influence on later branch
+prediction.
+
+Signed-off-by: Borislav Petkov <bp@suse.de>
+---
+ arch/x86/include/asm/spec_ctrl.h | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/arch/x86/include/asm/spec_ctrl.h b/arch/x86/include/asm/spec_ctrl.h
+index cae607a2fb6c..a7355c87d34b 100644
+--- a/arch/x86/include/asm/spec_ctrl.h
++++ b/arch/x86/include/asm/spec_ctrl.h
+@@ -53,5 +53,12 @@
+ #else /* __ASSEMBLY__ */
+ void x86_enable_ibrs(void);
+ void x86_disable_ibrs(void);
++
++static inline void x86_ibp_barrier(void)
++{
++	if (static_cpu_has(X86_FEATURE_SPEC_CTRL))
++		native_wrmsrl(MSR_IA32_PRED_CMD, FEATURE_SET_IBPB);
++}
++
+ #endif /* __ASSEMBLY__ */
+ #endif /* _ASM_X86_SPEC_CTRL_H */
+

@@ -1,0 +1,125 @@
+From: Wei Wang <wei.w.wang@intel.com>
+Date: Sat, 16 Dec 2017 19:18:48 +0100
+Subject: x86/kvm: Add MSR_IA32_SPEC_CTRL and MSR_IA32_PRED_CMD to kvm
+Patch-mainline: submitted on 2018/1/9
+References: bsc#1068032
+
+Add field to access guest MSR_IA332_SPEC_CTRL and MSR_IA32_PRED_CMD state.
+
+Signed-off-by: Wei Wang <wei.w.wang@intel.com>
+Signed-off-by: Tim Chen <tim.c.chen@linux.intel.com>
+[ Move MSR u64 to struct vcpu_vmx so as not to break kABI. ]
+Signed-off-by: Borislav Petkov <bp@suse.de>
+---
+ arch/x86/kvm/vmx.c | 23 ++++++++++++++++++-----
+ arch/x86/kvm/x86.c |  2 +-
+ 2 files changed, 19 insertions(+), 6 deletions(-)
+
+Index: kernel/arch/x86/kvm/vmx.c
+===================================================================
+--- kernel.orig/arch/x86/kvm/vmx.c
++++ kernel/arch/x86/kvm/vmx.c
+@@ -48,6 +48,7 @@
+ #include <asm/kexec.h>
+ #include <asm/apic.h>
+ #include <asm/irq_remapping.h>
++#include <asm/spec_ctrl.h>
+ 
+ #include "trace.h"
+ #include "pmu.h"
+@@ -599,6 +600,8 @@ struct vcpu_vmx {
+ 	struct page *pml_pg;
+ 
+ 	u64 current_tsc_ratio;
++
++	u64 spec_ctrl;
+ };
+ 
+ enum segment_cache_field {
+@@ -2783,6 +2786,7 @@ static int vmx_get_vmx_msr(struct kvm_vc
+  */
+ static int vmx_get_msr(struct kvm_vcpu *vcpu, struct msr_data *msr_info)
+ {
++	struct vcpu_vmx *vmx = to_vmx(vcpu);
+ 	struct shared_msr_entry *msr;
+ 
+ 	switch (msr_info->index) {
+@@ -2794,8 +2798,8 @@ static int vmx_get_msr(struct kvm_vcpu *
+ 		msr_info->data = vmcs_readl(GUEST_GS_BASE);
+ 		break;
+ 	case MSR_KERNEL_GS_BASE:
+-		vmx_load_host_state(to_vmx(vcpu));
+-		msr_info->data = to_vmx(vcpu)->msr_guest_kernel_gs_base;
++		vmx_load_host_state(vmx);
++		msr_info->data = vmx->msr_guest_kernel_gs_base;
+ 		break;
+ #endif
+ 	case MSR_EFER:
+@@ -2803,6 +2807,9 @@ static int vmx_get_msr(struct kvm_vcpu *
+ 	case MSR_IA32_TSC:
+ 		msr_info->data = guest_read_tsc(vcpu);
+ 		break;
++	case MSR_IA32_SPEC_CTRL:
++		msr_info->data = vmx->spec_ctrl;
++		break;
+ 	case MSR_IA32_SYSENTER_CS:
+ 		msr_info->data = vmcs_read32(GUEST_SYSENTER_CS);
+ 		break;
+@@ -2821,7 +2828,7 @@ static int vmx_get_msr(struct kvm_vcpu *
+ 	case MSR_IA32_FEATURE_CONTROL:
+ 		if (!nested_vmx_allowed(vcpu))
+ 			return 1;
+-		msr_info->data = to_vmx(vcpu)->nested.msr_ia32_feature_control;
++		msr_info->data = vmx->nested.msr_ia32_feature_control;
+ 		break;
+ 	case MSR_IA32_VMX_BASIC ... MSR_IA32_VMX_VMFUNC:
+ 		if (!nested_vmx_allowed(vcpu))
+@@ -2837,7 +2844,7 @@ static int vmx_get_msr(struct kvm_vcpu *
+ 			return 1;
+ 		/* Otherwise falls through */
+ 	default:
+-		msr = find_msr_entry(to_vmx(vcpu), msr_info->index);
++		msr = find_msr_entry(vmx, msr_info->index);
+ 		if (msr) {
+ 			msr_info->data = msr->data;
+ 			break;
+@@ -2902,6 +2909,9 @@ static int vmx_set_msr(struct kvm_vcpu *
+ 	case MSR_IA32_TSC:
+ 		kvm_write_tsc(vcpu, msr_info);
+ 		break;
++	case MSR_IA32_SPEC_CTRL:
++		vmx->spec_ctrl = msr_info->data;
++		break;
+ 	case MSR_IA32_CR_PAT:
+ 		if (vmcs_config.vmentry_ctrl & VM_ENTRY_LOAD_IA32_PAT) {
+ 			if (!kvm_mtrr_valid(vcpu, MSR_IA32_CR_PAT, data))
+@@ -5680,6 +5690,7 @@ static int handle_rdmsr(struct kvm_vcpu
+ 
+ 	msr_info.index = ecx;
+ 	msr_info.host_initiated = false;
++
+ 	if (vmx_get_msr(vcpu, &msr_info)) {
+ 		trace_kvm_msr_read_ex(ecx);
+ 		kvm_inject_gp(vcpu, 0);
+@@ -6273,6 +6284,8 @@ static __init int hardware_setup(void)
+ 	vmx_disable_intercept_for_msr(MSR_IA32_SYSENTER_CS, false);
+ 	vmx_disable_intercept_for_msr(MSR_IA32_SYSENTER_ESP, false);
+ 	vmx_disable_intercept_for_msr(MSR_IA32_SYSENTER_EIP, false);
++	vmx_disable_intercept_for_msr(MSR_IA32_SPEC_CTRL, false);
++	vmx_disable_intercept_for_msr(MSR_IA32_PRED_CMD, false);
+ 
+ 	memcpy(vmx_msr_bitmap_legacy_x2apic,
+ 			vmx_msr_bitmap_legacy, PAGE_SIZE);
+Index: kernel/arch/x86/kvm/x86.c
+===================================================================
+--- kernel.orig/arch/x86/kvm/x86.c
++++ kernel/arch/x86/kvm/x86.c
+@@ -960,7 +960,7 @@ static u32 msrs_to_save[] = {
+ 	MSR_CSTAR, MSR_KERNEL_GS_BASE, MSR_SYSCALL_MASK, MSR_LSTAR,
+ #endif
+ 	MSR_IA32_TSC, MSR_IA32_CR_PAT, MSR_VM_HSAVE_PA,
+-	MSR_IA32_FEATURE_CONTROL, MSR_IA32_BNDCFGS, MSR_TSC_AUX,
++	MSR_IA32_FEATURE_CONTROL, MSR_IA32_BNDCFGS, MSR_TSC_AUX, MSR_IA32_SPEC_CTRL,
+ };
+ 
+ static unsigned num_msrs_to_save;

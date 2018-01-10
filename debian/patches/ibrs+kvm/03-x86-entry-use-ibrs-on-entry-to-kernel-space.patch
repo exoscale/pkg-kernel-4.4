@@ -1,0 +1,183 @@
+From: Borislav Petkov <bp@suse.de>
+Date: Fri, 15 Dec 2017 19:56:13 +0100
+Subject: x86/entry: Use IBRS on entry to kernel space
+Patch-mainline: submitted on 2018/1/9
+References: bsc#1068032
+
+Toggle IBRS on entry to kernel space: enable *after* CR3 write and
+disable *before* CR3 write.
+
+Originally-by: Tim Chen <tim.c.chen@linux.intel.com>
+Signed-off-by: Borislav Petkov <bp@suse.de>
+---
+ arch/x86/entry/entry_64.S        | 22 ++++++++++++++++++++++
+ arch/x86/entry/entry_64_compat.S |  9 +++++++++
+ 2 files changed, 31 insertions(+)
+
+Index: kernel/arch/x86/entry/entry_64.S
+===================================================================
+--- kernel.orig/arch/x86/entry/entry_64.S
++++ kernel/arch/x86/entry/entry_64.S
+@@ -36,6 +36,7 @@
+ #include <asm/smap.h>
+ #include <asm/pgtable_types.h>
+ #include <asm/kaiser.h>
++#include <asm/spec_ctrl.h>
+ #include <linux/err.h>
+ 
+ /* Avoid __ASSEMBLER__'ifying <linux/audit.h> just for this.  */
+@@ -173,6 +174,8 @@ GLOBAL(entry_SYSCALL_64_after_swapgs)
+ 	pushq	%r11				/* pt_regs->r11 */
+ 	sub	$(6*8), %rsp			/* pt_regs->bp, bx, r12-15 not saved */
+ 
++	ENABLE_IBRS
++
+ 	testl	$_TIF_WORK_SYSCALL_ENTRY, ASM_THREAD_INFO(TI_flags, %rsp, SIZEOF_PTREGS)
+ 	jnz	tracesys
+ entry_SYSCALL_64_fastpath:
+@@ -211,6 +214,9 @@ entry_SYSCALL_64_fastpath:
+ 
+ 	movq	RIP(%rsp), %rcx
+ 	movq	EFLAGS(%rsp), %r11
++
++	DISABLE_IBRS
++
+ 	RESTORE_C_REGS_EXCEPT_RCX_R11
+ 	/*
+ 	 * This opens a window where we have a user CR3, but are
+@@ -355,6 +361,8 @@ GLOBAL(int_ret_from_sys_call)
+ 	 * perf profiles. Nothing jumps here.
+ 	 */
+ syscall_return_via_sysret:
++	DISABLE_IBRS
++
+ 	/* rcx and r11 are already restored (see code above) */
+ 	RESTORE_C_REGS_EXCEPT_RCX_R11
+ 	/*
+@@ -369,6 +377,8 @@ syscall_return_via_sysret:
+ 	USERGS_SYSRET64
+ 
+ opportunistic_sysret_failed:
++	DISABLE_IBRS
++
+ 	/*
+ 	 * This opens a window where we have a user CR3, but are
+ 	 * running in the kernel.  This makes using the CS
+@@ -536,6 +546,7 @@ END(irq_entries_start)
+ 	 */
+ 	SWAPGS
+ 	SWITCH_KERNEL_CR3
++	ENABLE_IBRS
+ 
+ 	/*
+ 	 * We need to tell lockdep that IRQs are off.  We can't do this until
+@@ -595,6 +606,7 @@ GLOBAL(retint_user)
+ 	mov	%rsp,%rdi
+ 	call	prepare_exit_to_usermode
+ 	TRACE_IRQS_IRETQ
++	DISABLE_IBRS
+ 	SWITCH_USER_CR3
+ 	SWAPGS
+ 	jmp	restore_regs_and_iret
+@@ -1061,6 +1073,7 @@ ENTRY(paranoid_entry)
+ 	movq	%rax, %cr3
+ 2:
+ #endif
++	ENABLE_IBRS
+ 	ret
+ END(paranoid_entry)
+ 
+@@ -1083,6 +1096,7 @@ ENTRY(paranoid_exit)
+ 	DISABLE_INTERRUPTS(CLBR_NONE)
+ 	TRACE_IRQS_OFF_DEBUG
+ 	TRACE_IRQS_IRETQ_DEBUG
++	DISABLE_IBRS
+ #ifdef CONFIG_KAISER
+ 	/* No ALTERNATIVE for X86_FEATURE_KAISER: paranoid_entry sets %ebx */
+ 	testl	$2, %ebx			/* SWITCH_USER_CR3 needed? */
+@@ -1126,6 +1140,8 @@ ENTRY(error_entry)
+ 	 */
+ 	SWAPGS
+ 
++	ENABLE_IBRS
++
+ .Lerror_entry_from_usermode_after_swapgs:
+ 	/*
+ 	 * We need to tell lockdep that IRQs are off.  We can't do this until
+@@ -1172,6 +1188,7 @@ ENTRY(error_entry)
+ 	/* fall through */
+ 
+ .Lerror_bad_iret:
++	ENABLE_IBRS_CLOBBER
+ 	/*
+ 	 * We came from an IRET to user mode, so we have user gsbase.
+ 	 * Switch to kernel gsbase:
+@@ -1326,8 +1343,13 @@ ENTRY(nmi)
+ 	movq	%rax, %cr3
+ 2:
+ #endif
++
++	ENABLE_IBRS
++
+ 	call	do_nmi
+ 
++	DISABLE_IBRS
++
+ #ifdef CONFIG_KAISER
+ 	/*
+ 	 * Unconditionally restore CR3.  I know we return to
+Index: kernel/arch/x86/entry/entry_64_compat.S
+===================================================================
+--- kernel.orig/arch/x86/entry/entry_64_compat.S
++++ kernel/arch/x86/entry/entry_64_compat.S
+@@ -15,6 +15,7 @@
+ #include <asm/smap.h>
+ #include <asm/pgtable_types.h>
+ #include <asm/kaiser.h>
++#include <asm/spec_ctrl.h>
+ #include <linux/linkage.h>
+ #include <linux/err.h>
+ 
+@@ -99,6 +100,8 @@ ENTRY(entry_SYSENTER_compat)
+ 	pushq   %r8                     /* pt_regs->r15 = 0 */
+ 	cld
+ 
++	ENABLE_IBRS
++
+ 	/*
+ 	 * Sysenter doesn't filter flags, so we need to clear NT
+ 	 * ourselves.  To save a few cycles, we can check whether
+@@ -197,6 +200,8 @@ ENTRY(entry_SYSCALL_compat)
+ 	pushq   %r8                     /* pt_regs->r14 = 0 */
+ 	pushq   %r8                     /* pt_regs->r15 = 0 */
+ 
++	ENABLE_IBRS
++
+ 	/*
+ 	 * User mode is traced as though IRQs are on, and SYSENTER
+ 	 * turned them off.
+@@ -212,6 +217,7 @@ ENTRY(entry_SYSCALL_compat)
+ 	/* Opportunistic SYSRET */
+ sysret32_from_system_call:
+ 	TRACE_IRQS_ON			/* User mode traces as IRQs on. */
++	DISABLE_IBRS
+ 	SWITCH_USER_CR3
+ 	movq	RBX(%rsp), %rbx		/* pt_regs->rbx */
+ 	movq	RBP(%rsp), %rbp		/* pt_regs->rbp */
+@@ -305,6 +311,8 @@ ENTRY(entry_INT80_compat)
+ 	pushq   %r15                    /* pt_regs->r15 */
+ 	cld
+ 
++	ENABLE_IBRS
++
+ 	/*
+ 	 * User mode is traced as though IRQs are on, and the interrupt
+ 	 * gate turned them off.
+@@ -317,6 +325,7 @@ ENTRY(entry_INT80_compat)
+ 
+ 	/* Go back to user mode. */
+ 	TRACE_IRQS_ON
++	DISABLE_IBRS
+ 	SWITCH_USER_CR3
+ 	SWAPGS
+ 	jmp	restore_regs_and_iret

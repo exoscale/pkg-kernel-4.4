@@ -1,0 +1,56 @@
+From: Tom Lendacky <thomas.lendacky@amd.com>
+Date: Mon, 18 Dec 2017 14:13:37 +0100
+Subject: x86/CPU/AMD: Make the LFENCE instruction serialized
+Patch-mainline: submitted on 2018/1/9
+References: bsc#1068032
+
+In order to reduce the impact of using MFENCE, make the execution of the
+LFENCE instruction serialized.  This is done by setting bit 1 of MSR
+0xc0011029 (DE_CFG).
+
+Some families that support LFENCE do not have this MSR.  For these
+families, the LFENCE instruction is already serialized.
+
+Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
+Signed-off-by: Borislav Petkov <bp@suse.de>
+---
+ arch/x86/include/asm/msr-index.h |  2 ++
+ arch/x86/kernel/cpu/amd.c        | 12 ++++++++++--
+ 2 files changed, 12 insertions(+), 2 deletions(-)
+
+Index: kernel/arch/x86/include/asm/msr-index.h
+===================================================================
+--- kernel.orig/arch/x86/include/asm/msr-index.h
++++ kernel/arch/x86/include/asm/msr-index.h
+@@ -342,6 +342,8 @@
+ #define FAM10H_MMIO_CONF_BASE_MASK	0xfffffffULL
+ #define FAM10H_MMIO_CONF_BASE_SHIFT	20
+ #define MSR_FAM10H_NODE_ID		0xc001100c
++#define MSR_F10H_DECFG			0xc0011029
++#define MSR_F10H_DECFG_LFENCE_SERIALIZE_BIT	1
+ 
+ /* K8 MSRs */
+ #define MSR_K8_TOP_MEM1			0xc001001a
+Index: kernel/arch/x86/kernel/cpu/amd.c
+===================================================================
+--- kernel.orig/arch/x86/kernel/cpu/amd.c
++++ kernel/arch/x86/kernel/cpu/amd.c
+@@ -747,8 +747,16 @@ static void init_amd(struct cpuinfo_x86
+ 		set_cpu_cap(c, X86_FEATURE_K8);
+ 
+ 	if (cpu_has_xmm2) {
+-		/* MFENCE stops RDTSC speculation */
+-		set_cpu_cap(c, X86_FEATURE_MFENCE_RDTSC);
++		/*
++		 * Use LFENCE for execution serialization. On families which
++		 * don't have that MSR, LFENCE is already serialized.
++		 */
++		if (c->x86 > 0xf)
++			msr_set_bit(MSR_F10H_DECFG,
++				    MSR_F10H_DECFG_LFENCE_SERIALIZE_BIT);
++
++		/* LFENCE with MSR_F10H_DECFG[1]=1 stops RDTSC speculation */
++		set_cpu_cap(c, X86_FEATURE_LFENCE_RDTSC);
+ 	}
+ 
+ 	/*

@@ -1,0 +1,148 @@
+From: Borislav Petkov <bp@suse.de>
+Date: Sun, 17 Dec 2017 16:01:57 +0100
+Subject: x86/spec_ctrl: Check whether IBRS is enabled before using it
+Patch-mainline: submitted on 2018/1/9
+References: bsc#1068032
+
+Check whether IBRS is enabled before using it.
+
+Carved out from a patch by Tim Chen <tim.c.chen@linux.intel.com>
+
+Signed-off-by: Borislav Petkov <bp@suse.de>
+---
+ arch/x86/include/asm/spec_ctrl.h | 37 +++++++++++++++++++++++++++++++++++++
+ arch/x86/kernel/cpu/spec_ctrl.c  | 15 +++++++++++++--
+ arch/x86/kvm/vmx.c               |  2 +-
+ 3 files changed, 51 insertions(+), 3 deletions(-)
+
+Index: kernel/arch/x86/include/asm/spec_ctrl.h
+===================================================================
+--- kernel.orig/arch/x86/include/asm/spec_ctrl.h
++++ kernel/arch/x86/include/asm/spec_ctrl.h
+@@ -17,27 +17,55 @@
+ 
+ .macro ENABLE_IBRS_CLOBBER
+ 	ALTERNATIVE "jmp .Lend_\@", "", X86_FEATURE_SPEC_CTRL
++	call x86_ibrs_enabled
++	test %eax, %eax
++	jz .Llfence_\@
++
+ 	__ENABLE_IBRS_CLOBBER
++	jmp .Lend_\@
++
++.Llfence_\@:
++	lfence
+ .Lend_\@:
+ .endm
+ 
+ 
+ .macro ENABLE_IBRS
+ 	ALTERNATIVE "jmp .Lend_\@", "", X86_FEATURE_SPEC_CTRL
++
+ 	pushq %rax
++
++	call x86_ibrs_enabled
++	test %eax, %eax
++	jz .Llfence_\@
++
+ 	pushq %rcx
+ 	pushq %rdx
+ 	__ENABLE_IBRS_CLOBBER
+ 	popq %rdx
+ 	popq %rcx
++
++	jmp .Lpop_\@
++
++.Llfence_\@:
++	lfence
++
++.Lpop_\@:
+ 	popq %rax
++
+ .Lend_\@:
+ .endm
+ 
+ 
+ .macro DISABLE_IBRS
+ 	ALTERNATIVE "jmp .Lend_\@", "", X86_FEATURE_SPEC_CTRL
++
+ 	pushq %rax
++
++	call x86_ibrs_enabled
++	test %eax, %eax
++	jz .Llfence_\@
++
+ 	pushq %rcx
+ 	pushq %rdx
+ 	movl $MSR_IA32_SPEC_CTRL, %ecx
+@@ -46,7 +74,15 @@
+ 	wrmsr
+ 	popq %rdx
+ 	popq %rcx
++
++	jmp .Lpop_\@
++
++.Llfence_\@:
++	lfence
++
++.Lpop_\@:
+ 	popq %rax
++
+ .Lend_\@:
+ .endm
+ 
+@@ -58,6 +94,7 @@
+ void x86_enable_ibrs(void);
+ void x86_disable_ibrs(void);
+ void stuff_RSB(void);
++unsigned int x86_ibrs_enabled(void);
+ 
+ static inline void x86_ibp_barrier(void)
+ {
+Index: kernel/arch/x86/kernel/cpu/spec_ctrl.c
+===================================================================
+--- kernel.orig/arch/x86/kernel/cpu/spec_ctrl.c
++++ kernel/arch/x86/kernel/cpu/spec_ctrl.c
+@@ -8,16 +8,27 @@
+ #include <asm/processor.h>
+ #include <asm/spec_ctrl.h>
+ 
++/*
++ * Keep it open for more flags in case needed.
++ */
++static unsigned int ibrs_state = 0;
++
++unsigned int notrace x86_ibrs_enabled(void)
++{
++	return ibrs_state;
++}
++EXPORT_SYMBOL_GPL(x86_ibrs_enabled);
++
+ void x86_disable_ibrs(void)
+ {
+-	if (boot_cpu_has(X86_FEATURE_SPEC_CTRL))
++	if (x86_ibrs_enabled())
+ 		native_wrmsrl(MSR_IA32_SPEC_CTRL, 0);
+ }
+ EXPORT_SYMBOL_GPL(x86_disable_ibrs);
+ 
+ void x86_enable_ibrs(void)
+ {
+-	if (boot_cpu_has(X86_FEATURE_SPEC_CTRL))
++	if (x86_ibrs_enabled())
+ 		native_wrmsrl(MSR_IA32_SPEC_CTRL, FEATURE_ENABLE_IBRS);
+ }
+ EXPORT_SYMBOL_GPL(x86_enable_ibrs);
+Index: kernel/arch/x86/kvm/vmx.c
+===================================================================
+--- kernel.orig/arch/x86/kvm/vmx.c
++++ kernel/arch/x86/kvm/vmx.c
+@@ -8603,7 +8603,7 @@ static void __noclone vmx_vcpu_run(struc
+ 
+ 	atomic_switch_perf_msrs(vmx);
+ 
+-	if (boot_cpu_has(X86_FEATURE_SPEC_CTRL))
++	if (x86_ibrs_enabled())
+ 		add_atomic_switch_msr(vmx, MSR_IA32_SPEC_CTRL,
+ 				      vmx->spec_ctrl, FEATURE_ENABLE_IBRS);
+ 

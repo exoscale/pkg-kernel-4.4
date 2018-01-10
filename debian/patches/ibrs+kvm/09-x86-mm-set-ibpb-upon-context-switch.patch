@@ -1,0 +1,36 @@
+From: Tim Chen <tim.c.chen@linux.intel.com>
+Date: Sat, 16 Dec 2017 18:25:12 +0100
+Subject: x86/mm: Set IBPB upon context switch
+Patch-mainline: submitted on 2018/1/9
+References: bsc#1068032
+
+Set IBPB on context switch when writing CR3.
+
+Signed-off-by: Tim Chen <tim.c.chen@linux.intel.com>
+[ Convert to do x86_ibp_barrier(). ]
+Signed-off-by: Borislav Petkov <bp@suse.de>
+---
+ arch/x86/mm/tlb.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+Index: kernel/arch/x86/mm/tlb.c
+===================================================================
+--- kernel.orig/arch/x86/mm/tlb.c
++++ kernel/arch/x86/mm/tlb.c
+@@ -14,6 +14,7 @@
+ #include <asm/apic.h>
+ #include <asm/uv/uv.h>
+ #include <asm/kaiser.h>
++#include <asm/spec_ctrl.h>
+ 
+ /*
+  *	Smarter SMP flushing macros.
+@@ -98,6 +99,8 @@ void switch_mm(struct mm_struct *prev, s
+ 	unsigned cpu = smp_processor_id();
+ 
+ 	if (likely(prev != next)) {
++		x86_ibp_barrier();
++
+ #ifdef CONFIG_SMP
+ 		this_cpu_write(cpu_tlbstate.state, TLBSTATE_OK);
+ 		this_cpu_write(cpu_tlbstate.active_mm, next);

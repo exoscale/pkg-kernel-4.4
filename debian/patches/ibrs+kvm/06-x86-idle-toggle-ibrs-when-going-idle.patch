@@ -1,0 +1,97 @@
+From: Borislav Petkov <bp@suse.de>
+Date: Sat, 16 Dec 2017 17:59:42 +0100
+Subject: x86/idle: Toggle IBRS when going idle
+Patch-mainline: submitted on 2018/1/9
+References: bsc#1068032
+
+Disable when entering idle and reenable it back on exit.
+
+Orginally-by: Tim Chen <tim.c.chen@linux.intel.com>
+Signed-off-by: Borislav Petkov <bp@suse.de>
+---
+ arch/x86/include/asm/mwait.h | 6 ++++++
+ arch/x86/kernel/process.c    | 5 +++++
+ arch/x86/lib/delay.c         | 8 ++++++++
+ 3 files changed, 19 insertions(+)
+
+Index: kernel/arch/x86/include/asm/mwait.h
+===================================================================
+--- kernel.orig/arch/x86/include/asm/mwait.h
++++ kernel/arch/x86/include/asm/mwait.h
+@@ -5,6 +5,8 @@
+ 
+ #include <asm/cpufeature.h>
+ 
++#include <asm/spec_ctrl.h>
++
+ #define MWAIT_SUBSTATE_MASK		0xf
+ #define MWAIT_CSTATE_MASK		0xf
+ #define MWAIT_SUBSTATE_SIZE		4
+@@ -104,9 +106,13 @@ static inline void mwait_idle_with_hints
+ 			mb();
+ 		}
+ 
++		x86_disable_ibrs();
++
+ 		__monitor((void *)&current_thread_info()->flags, 0, 0);
+ 		if (!need_resched())
+ 			__mwait(eax, ecx);
++
++		x86_enable_ibrs();
+ 	}
+ 	current_clr_polling();
+ }
+Index: kernel/arch/x86/kernel/process.c
+===================================================================
+--- kernel.orig/arch/x86/kernel/process.c
++++ kernel/arch/x86/kernel/process.c
+@@ -424,11 +424,16 @@ static void mwait_idle(void)
+ 			smp_mb(); /* quirk */
+ 		}
+ 
++		x86_disable_ibrs();
++
+ 		__monitor((void *)&current_thread_info()->flags, 0, 0);
+ 		if (!need_resched())
+ 			__sti_mwait(0, 0);
+ 		else
+ 			local_irq_enable();
++
++		x86_enable_ibrs();
++
+ 		trace_cpu_idle_rcuidle(PWR_EVENT_EXIT, smp_processor_id());
+ 	} else {
+ 		local_irq_enable();
+Index: kernel/arch/x86/lib/delay.c
+===================================================================
+--- kernel.orig/arch/x86/lib/delay.c
++++ kernel/arch/x86/lib/delay.c
+@@ -26,6 +26,8 @@
+ # include <asm/smp.h>
+ #endif
+ 
++#define IBRS_DISABLE_THRESHOLD 1000
++
+ /* simple loop based delay: */
+ static void delay_loop(unsigned long loops)
+ {
+@@ -98,6 +100,9 @@ static void delay_mwaitx(unsigned long _
+ 	for (;;) {
+ 		delay = min_t(u64, MWAITX_MAX_LOOPS, loops);
+ 
++		if (delay > IBRS_DISABLE_THRESHOLD)
++			x86_disable_ibrs();
++
+ 		/*
+ 		 * Use cpu_tss as a cacheline-aligned, seldomly
+ 		 * accessed per-cpu variable as the monitor target.
+@@ -111,6 +116,9 @@ static void delay_mwaitx(unsigned long _
+ 		 */
+ 		__mwaitx(MWAITX_DISABLE_CSTATES, delay, MWAITX_ECX_TIMER_ENABLE);
+ 
++		if (delay > IBRS_DISABLE_THRESHOLD)
++			x86_enable_ibrs();
++
+ 		end = rdtsc_ordered();
+ 
+ 		if (loops <= end - start)

@@ -1,0 +1,101 @@
+From: Tom Lendacky <thomas.lendacky@amd.com>
+Date: Mon, 18 Dec 2017 11:50:09 +0100
+Subject: x86/CPU/AMD: Add speculative control support for AMD
+Patch-mainline: submitted on 2018/1/9
+References: bsc#1068032
+
+Add speculative control support for AMD processors. For AMD, speculative
+control is indicated as follows:
+
+  CPUID EAX=0x00000007, ECX=0x00 return EDX[26] indicates support for
+  both IBRS and IBPB.
+
+  CPUID EAX=0x80000008, ECX=0x00 return EBX[12] indicates support for
+  just IBPB.
+
+On AMD family 0x10, 0x12 and 0x16 processors where either of the above
+features are not supported, IBPB can be achieved by disabling
+indirect branch predictor support in MSR 0xc0011021[14] at boot.
+
+Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
+[ Move everything to spec_ctrl.c ]
+Signed-off-by: Borislav Petkov <bp@suse.de>
+---
+ arch/x86/include/asm/cpufeature.h |  1 +
+ arch/x86/include/asm/msr-index.h  |  1 +
+ arch/x86/kernel/cpu/amd.c         |  3 +++
+ arch/x86/kernel/cpu/spec_ctrl.c   | 16 ++++++++++++++++
+ 4 files changed, 21 insertions(+)
+
+Index: kernel/arch/x86/include/asm/msr-index.h
+===================================================================
+--- kernel.orig/arch/x86/include/asm/msr-index.h
++++ kernel/arch/x86/include/asm/msr-index.h
+@@ -332,6 +332,7 @@
+ #define MSR_F15H_PERF_CTR		0xc0010201
+ #define MSR_F15H_NB_PERF_CTL		0xc0010240
+ #define MSR_F15H_NB_PERF_CTR		0xc0010241
++#define MSR_F15H_IC_CFG			0xc0011021
+ 
+ /* Fam 10h MSRs */
+ #define MSR_FAM10H_MMIO_CONF_BASE	0xc0010058
+Index: kernel/arch/x86/kernel/cpu/amd.c
+===================================================================
+--- kernel.orig/arch/x86/kernel/cpu/amd.c
++++ kernel/arch/x86/kernel/cpu/amd.c
+@@ -12,6 +12,7 @@
+ #include <asm/smp.h>
+ #include <asm/pci-direct.h>
+ #include <asm/delay.h>
++#include <asm/spec_ctrl.h>
+ 
+ #ifdef CONFIG_X86_64
+ # include <asm/mmconfig.h>
+@@ -769,6 +770,8 @@ static void init_amd(struct cpuinfo_x86
+ 
+ 	/* AMD CPUs don't reset SS attributes on SYSRET */
+ 	set_cpu_bug(c, X86_BUG_SYSRET_SS_ATTRS);
++
++	x86_spec_check();
+ }
+ 
+ #ifdef CONFIG_X86_32
+Index: kernel/arch/x86/kernel/cpu/spec_ctrl.c
+===================================================================
+--- kernel.orig/arch/x86/kernel/cpu/spec_ctrl.c
++++ kernel/arch/x86/kernel/cpu/spec_ctrl.c
+@@ -62,6 +62,22 @@ void x86_spec_check(void)
+ 
+ 			setup_force_cpu_cap(X86_FEATURE_SPEC_CTRL);
+ 		}
++	} else if (boot_cpu_data.x86_vendor == X86_VENDOR_AMD) {
++		if (boot_cpu_has(X86_FEATURE_SPEC_CTRL))
++			ibrs_state = 1;
++
++		if (boot_cpu_has(X86_FEATURE_IBPB)) {
++			ibpb_state = 1;
++		} else {
++			switch (boot_cpu_data.x86) {
++			case 0x10:
++			case 0x12:
++			case 0x16:
++				pr_info_once("Disabling indirect branch predictor support\n");
++				msr_set_bit(MSR_F15H_IC_CFG, 14);
++				break;
++			}
++		}
+ 	}
+ }
+ EXPORT_SYMBOL_GPL(x86_spec_check);
+Index: kernel/arch/x86/include/asm/cpufeatures.h
+===================================================================
+--- kernel.orig/arch/x86/include/asm/cpufeatures.h
++++ kernel/arch/x86/include/asm/cpufeatures.h
+@@ -252,6 +252,7 @@
+ 
+ /* AMD-defined CPU features, CPUID level 0x80000008 (ebx), word 13 */
+ #define X86_FEATURE_CLZERO	(13*32+0) /* CLZERO instruction */
++#define X86_FEATURE_IBPB	(13*32+12) /* Indirect Branch Prediction Barrier */
+ 
+ /* Thermal and Power Management Leaf, CPUID level 0x00000006 (eax), word 14 */
+ #define X86_FEATURE_DTHERM	(14*32+ 0) /* Digital Thermal Sensor */

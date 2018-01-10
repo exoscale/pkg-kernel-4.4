@@ -1,0 +1,85 @@
+From: Tim Chen <tim.c.chen@linux.intel.com>
+Date: Fri, 15 Sep 2017 18:04:53 -0700
+Subject: x86/enter: Add macros to set/clear IBRS and set IBPB
+Patch-mainline: submitted on 2018/1/9
+References: bsc#1068032
+
+Add setup macros to control IBRS and IBPB.
+
+Boris:
+
+Change the alternatives to jump over the code so that backports
+to older versions are easier since ALTERNATIVEs padding came in
+in v4.1.
+
+Also, make them proper asm macros.
+
+Also, use XOR to zero out regs.
+
+Also, fold in __ENABLE_IBRS_CLOBBER into the other macros.
+
+Signed-off-by: Tim Chen <tim.c.chen@linux.intel.com>
+Signed-off-by: Borislav Petkov <bp@suse.de>
+---
+ arch/x86/include/asm/spec_ctrl.h | 54 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 54 insertions(+)
+
+Index: kernel/arch/x86/include/asm/spec_ctrl.h
+===================================================================
+--- /dev/null
++++ kernel/arch/x86/include/asm/spec_ctrl.h
+@@ -0,0 +1,54 @@
++#ifndef _ASM_X86_SPEC_CTRL_H
++#define _ASM_X86_SPEC_CTRL_H
++
++#include <linux/stringify.h>
++#include <asm/msr-index.h>
++#include <asm/cpufeatures.h>
++#include <asm/alternative-asm.h>
++
++#ifdef __ASSEMBLY__
++
++.macro __ENABLE_IBRS_CLOBBER
++	movl $MSR_IA32_SPEC_CTRL, %ecx
++	xorl %edx, %edx
++	movl $FEATURE_ENABLE_IBRS, %eax
++	wrmsr
++.endm
++
++.macro ENABLE_IBRS_CLOBBER
++	ALTERNATIVE "jmp .Lend_\@", "", X86_FEATURE_SPEC_CTRL
++	__ENABLE_IBRS_CLOBBER
++.Lend_\@:
++.endm
++
++
++.macro ENABLE_IBRS
++	ALTERNATIVE "jmp .Lend_\@", "", X86_FEATURE_SPEC_CTRL
++	pushq %rax
++	pushq %rcx
++	pushq %rdx
++	__ENABLE_IBRS_CLOBBER
++	popq %rdx
++	popq %rcx
++	popq %rax
++.Lend_\@:
++.endm
++
++
++.macro DISABLE_IBRS
++	ALTERNATIVE "jmp .Lend_\@", "", X86_FEATURE_SPEC_CTRL
++	pushq %rax
++	pushq %rcx
++	pushq %rdx
++	movl $MSR_IA32_SPEC_CTRL, %ecx
++	xorl %edx, %edx
++	xorl %eax, %eax
++	wrmsr
++	popq %rdx
++	popq %rcx
++	popq %rax
++.Lend_\@:
++.endm
++
++#endif /* __ASSEMBLY__ */
++#endif /* _ASM_X86_SPEC_CTRL_H */

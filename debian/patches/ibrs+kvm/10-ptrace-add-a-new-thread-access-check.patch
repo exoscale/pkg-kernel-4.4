@@ -1,0 +1,91 @@
+From: Borislav Petkov <bp@suse.de>
+Date: Sat, 16 Dec 2017 18:32:52 +0100
+Subject: ptrace: Add a new thread access check
+Patch-mainline: submitted on 2018/1/9
+References: bsc#1068032
+
+... which checks current and a target task. Add IBPB ptrace mode too.
+
+Carved out from a patch by Tim Chen <tim.c.chen@linux.intel.com>
+
+Signed-off-by: Borislav Petkov <bp@suse.de>
+---
+ include/linux/ptrace.h |  6 ++++++
+ kernel/ptrace.c        | 18 ++++++++++++++----
+ 2 files changed, 20 insertions(+), 4 deletions(-)
+
+diff --git a/include/linux/ptrace.h b/include/linux/ptrace.h
+index 81fdf4b8aba4..c84b8817755b 100644
+--- a/include/linux/ptrace.h
++++ b/include/linux/ptrace.h
+@@ -59,12 +59,15 @@ extern void exit_ptrace(struct task_struct *tracer, struct list_head *dead);
+ #define PTRACE_MODE_NOAUDIT	0x04
+ #define PTRACE_MODE_FSCREDS 0x08
+ #define PTRACE_MODE_REALCREDS 0x10
++#define PTRACE_MODE_NOACCESS_CHK 0x20
+ 
+ /* shorthands for READ/ATTACH and FSCREDS/REALCREDS combinations */
+ #define PTRACE_MODE_READ_FSCREDS (PTRACE_MODE_READ | PTRACE_MODE_FSCREDS)
+ #define PTRACE_MODE_READ_REALCREDS (PTRACE_MODE_READ | PTRACE_MODE_REALCREDS)
+ #define PTRACE_MODE_ATTACH_FSCREDS (PTRACE_MODE_ATTACH | PTRACE_MODE_FSCREDS)
+ #define PTRACE_MODE_ATTACH_REALCREDS (PTRACE_MODE_ATTACH | PTRACE_MODE_REALCREDS)
++#define PTRACE_MODE_IBPB (PTRACE_MODE_ATTACH | PTRACE_MODE_NOAUDIT \
++			| PTRACE_MODE_NOACCESS_CHK | PTRACE_MODE_REALCREDS)
+ 
+ /**
+  * ptrace_may_access - check whether the caller is permitted to access
+@@ -82,6 +85,9 @@ extern void exit_ptrace(struct task_struct *tracer, struct list_head *dead);
+  */
+ extern bool ptrace_may_access(struct task_struct *task, unsigned int mode);
+ 
++extern int ___ptrace_may_access(struct task_struct *cur, struct task_struct *task,
++	unsigned int mode);
++
+ static inline int ptrace_reparented(struct task_struct *child)
+ {
+ 	return !same_thread_group(child->real_parent, child->parent);
+diff --git a/kernel/ptrace.c b/kernel/ptrace.c
+index 5e2cd1030702..14cc49a52881 100644
+--- a/kernel/ptrace.c
++++ b/kernel/ptrace.c
+@@ -235,9 +235,10 @@ static int ptrace_has_cap(struct user_namespace *ns, unsigned int mode)
+ }
+ 
+ /* Returns 0 on success, -errno on denial. */
+-static int __ptrace_may_access(struct task_struct *task, unsigned int mode)
++int ___ptrace_may_access(struct task_struct *cur, struct task_struct *task,
++		unsigned int mode)
+ {
+-	const struct cred *cred = current_cred(), *tcred;
++	const struct cred *cred = __task_cred(cur), *tcred;
+ 	struct mm_struct *mm;
+ 	kuid_t caller_uid;
+ 	kgid_t caller_gid;
+@@ -257,7 +258,7 @@ static int __ptrace_may_access(struct task_struct *task, unsigned int mode)
+ 	 */
+ 
+ 	/* Don't let security modules deny introspection */
+-	if (same_thread_group(task, current))
++	if (same_thread_group(task, cur))
+ 		return 0;
+ 	rcu_read_lock();
+ 	if (mode & PTRACE_MODE_FSCREDS) {
+@@ -295,7 +296,16 @@ ok:
+ 	     !ptrace_has_cap(mm->user_ns, mode)))
+ 	    return -EPERM;
+ 
+-	return security_ptrace_access_check(task, mode);
++	if (!(mode & PTRACE_MODE_NOACCESS_CHK))
++		return security_ptrace_access_check(task, mode);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(___ptrace_may_access);
++
++static int __ptrace_may_access(struct task_struct *task, unsigned int mode)
++{
++	return ___ptrace_may_access(current, task, mode);
+ }
+ 
+ bool ptrace_may_access(struct task_struct *task, unsigned int mode)
+

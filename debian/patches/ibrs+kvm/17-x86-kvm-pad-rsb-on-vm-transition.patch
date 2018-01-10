@@ -1,0 +1,95 @@
+From: Tim Chen <tim.c.chen@linux.intel.com>
+Date: Sat, 16 Dec 2017 19:35:49 +0100
+Subject: x86/kvm: Pad RSB on VM transition
+Patch-mainline: submitted on 2018/1/9
+References: bsc#1068032
+
+Add code to pad the local CPU's RSB entries to protect
+from previous less privilege mode.
+
+Boris:
+
+ - Use asm function instead of duplicating a C function.
+ - Add indirection to stuff_rsb() so that EXPORT_SYMBOL_GPL works.
+ Otherwise we'd need to backport the asm versions of those from 4.9.
+
+Signed-off-by: Tim Chen <tim.c.chen@linux.intel.com>
+Signed-off-by: Borislav Petkov <bp@suse.de>
+---
+ arch/x86/include/asm/proto.h     |  1 +
+ arch/x86/include/asm/spec_ctrl.h |  1 +
+ arch/x86/kernel/cpu/spec_ctrl.c  | 11 +++++++++++
+ arch/x86/kvm/vmx.c               |  3 +++
+ 4 files changed, 16 insertions(+)
+
+Index: kernel/arch/x86/include/asm/proto.h
+===================================================================
+--- kernel.orig/arch/x86/include/asm/proto.h
++++ kernel/arch/x86/include/asm/proto.h
+@@ -16,6 +16,7 @@ void entry_SYSENTER_compat(void);
+ 
+ void x86_configure_nx(void);
+ void x86_report_nx(void);
++void stuff_rsb(void);
+ 
+ extern int reboot_force;
+ 
+Index: kernel/arch/x86/include/asm/spec_ctrl.h
+===================================================================
+--- kernel.orig/arch/x86/include/asm/spec_ctrl.h
++++ kernel/arch/x86/include/asm/spec_ctrl.h
+@@ -57,6 +57,7 @@
+ #else /* __ASSEMBLY__ */
+ void x86_enable_ibrs(void);
+ void x86_disable_ibrs(void);
++void stuff_RSB(void);
+ 
+ static inline void x86_ibp_barrier(void)
+ {
+Index: kernel/arch/x86/kernel/cpu/spec_ctrl.c
+===================================================================
+--- kernel.orig/arch/x86/kernel/cpu/spec_ctrl.c
++++ kernel/arch/x86/kernel/cpu/spec_ctrl.c
+@@ -4,6 +4,7 @@
+  */
+ 
+ #include <asm/msr.h>
++#include <asm/proto.h>
+ #include <asm/processor.h>
+ #include <asm/spec_ctrl.h>
+ 
+@@ -20,3 +21,13 @@ void x86_enable_ibrs(void)
+ 		native_wrmsrl(MSR_IA32_SPEC_CTRL, FEATURE_ENABLE_IBRS);
+ }
+ EXPORT_SYMBOL_GPL(x86_enable_ibrs);
++
++/*
++ * Do this indirection as otherwise we'd need to backport the
++ * EXPORT_SYMBOL_GPL() for asm stuff.
++ */
++void stuff_RSB(void)
++{
++	stuff_rsb();
++}
++EXPORT_SYMBOL_GPL(stuff_RSB);
+Index: kernel/arch/x86/kvm/vmx.c
+===================================================================
+--- kernel.orig/arch/x86/kvm/vmx.c
++++ kernel/arch/x86/kvm/vmx.c
+@@ -49,6 +49,7 @@
+ #include <asm/apic.h>
+ #include <asm/irq_remapping.h>
+ #include <asm/spec_ctrl.h>
++#include <asm/proto.h>
+ 
+ #include "trace.h"
+ #include "pmu.h"
+@@ -8714,6 +8715,8 @@ static void __noclone vmx_vcpu_run(struc
+ #endif
+ 	      );
+ 
++	stuff_RSB();
++
+ 	/* MSR_IA32_DEBUGCTLMSR is zeroed on vmexit. Restore it if needed */
+ 	if (debugctlmsr)
+ 		update_debugctlmsr(debugctlmsr);

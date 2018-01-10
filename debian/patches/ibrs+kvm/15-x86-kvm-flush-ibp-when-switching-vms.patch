@@ -1,0 +1,27 @@
+From: Tim Chen <tim.c.chen@linux.intel.com>
+Date: Fri, 13 Oct 2017 14:31:46 -0700
+Subject: x86/kvm: Flush IBP when switching VMs
+Patch-mainline: submitted on 2018/1/9
+References: bsc#1068032
+
+Set IBPB (Indirect branch prediction barrier) when switching VMs.
+
+Signed-off-by: Tim Chen <tim.c.chen@linux.intel.com>
+Signed-off-by: Borislav Petkov <bp@suse.de>
+---
+ arch/x86/kvm/vmx.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+Index: kernel/arch/x86/kvm/vmx.c
+===================================================================
+--- kernel.orig/arch/x86/kvm/vmx.c
++++ kernel/arch/x86/kvm/vmx.c
+@@ -2051,6 +2051,8 @@ static void vmx_vcpu_load(struct kvm_vcp
+ 	if (per_cpu(current_vmcs, cpu) != vmx->loaded_vmcs->vmcs) {
+ 		per_cpu(current_vmcs, cpu) = vmx->loaded_vmcs->vmcs;
+ 		vmcs_load(vmx->loaded_vmcs->vmcs);
++
++		x86_ibp_barrier();
+ 	}
+ 
+ 	if (vmx->loaded_vmcs->cpu != cpu) {

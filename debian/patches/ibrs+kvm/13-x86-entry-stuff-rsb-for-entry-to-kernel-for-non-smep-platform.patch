@@ -1,0 +1,85 @@
+From: Tim Chen <tim.c.chen@linux.intel.com>
+Date: Sat, 16 Dec 2017 19:01:26 +0100
+Subject: x86/entry: Stuff RSB for entry to kernel for non-SMEP platform
+Patch-mainline: submitted on 2018/1/9
+References: bsc#1068032
+
+Stuff RSB to prevent RSB underflow on non-SMEP platforms.
+
+Signed-off-by: Tim Chen <tim.c.chen@linux.intel.com>
+Signed-off-by: Borislav Petkov <bp@suse.de>
+---
+ arch/x86/entry/entry_64.S        | 10 ++++++++++
+ arch/x86/entry/entry_64_compat.S |  3 +++
+ 2 files changed, 13 insertions(+)
+
+Index: kernel/arch/x86/entry/entry_64.S
+===================================================================
+--- kernel.orig/arch/x86/entry/entry_64.S
++++ kernel/arch/x86/entry/entry_64.S
+@@ -175,6 +175,7 @@ GLOBAL(entry_SYSCALL_64_after_swapgs)
+ 	sub	$(6*8), %rsp			/* pt_regs->bp, bx, r12-15 not saved */
+ 
+ 	ENABLE_IBRS
++	STUFF_RSB
+ 
+ 	testl	$_TIF_WORK_SYSCALL_ENTRY, ASM_THREAD_INFO(TI_flags, %rsp, SIZEOF_PTREGS)
+ 	jnz	tracesys
+@@ -537,6 +538,8 @@ END(irq_entries_start)
+ 	SAVE_C_REGS
+ 	SAVE_EXTRA_REGS
+ 
++	STUFF_RSB
++
+ 	testb	$3, CS(%rsp)
+ 	jz	1f
+ 
+@@ -1047,6 +1050,10 @@ ENTRY(paranoid_entry)
+ 	cld
+ 	SAVE_C_REGS 8
+ 	SAVE_EXTRA_REGS 8
++
++	/* Do the stuffing unconditionally from user/kernel to be safe */
++	STUFF_RSB
++
+ 	movl	$1, %ebx
+ 	movl	$MSR_GS_BASE, %ecx
+ 	rdmsr
+@@ -1122,6 +1129,9 @@ ENTRY(error_entry)
+ 	cld
+ 	SAVE_C_REGS 8
+ 	SAVE_EXTRA_REGS 8
++
++	STUFF_RSB
++
+ 	/*
+ 	 * error_entry() always returns with a kernel gsbase and
+ 	 * CR3.  We must also have a kernel CR3/gsbase before
+Index: kernel/arch/x86/entry/entry_64_compat.S
+===================================================================
+--- kernel.orig/arch/x86/entry/entry_64_compat.S
++++ kernel/arch/x86/entry/entry_64_compat.S
+@@ -101,6 +101,7 @@ ENTRY(entry_SYSENTER_compat)
+ 	cld
+ 
+ 	ENABLE_IBRS
++	STUFF_RSB
+ 
+ 	/*
+ 	 * Sysenter doesn't filter flags, so we need to clear NT
+@@ -201,6 +202,7 @@ ENTRY(entry_SYSCALL_compat)
+ 	pushq   %r8                     /* pt_regs->r15 = 0 */
+ 
+ 	ENABLE_IBRS
++	STUFF_RSB
+ 
+ 	/*
+ 	 * User mode is traced as though IRQs are on, and SYSENTER
+@@ -312,6 +314,7 @@ ENTRY(entry_INT80_compat)
+ 	cld
+ 
+ 	ENABLE_IBRS
++	STUFF_RSB
+ 
+ 	/*
+ 	 * User mode is traced as though IRQs are on, and the interrupt
