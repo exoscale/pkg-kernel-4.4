@@ -20,6 +20,8 @@ export SHELL=/bin/bash -e
 # Where do we find the common configuration.
 export DROOT=debian
 
+include /usr/share/quilt/quilt.make
+
 # Common variables for all architectures
 include $(DROOT)/rules.d/0-common-vars.mk
 
@@ -86,9 +88,9 @@ endif
 # Debian Build System targets
 binary: binary-indep binary-arch
 
-build: build-arch build-indep
+build: $(QUILT_STAMPFN) build-arch build-indep
 
-clean: debian/control
+clean: unpatch debian/control
 	dh_testdir
 	dh_testroot
 	dh_clean
