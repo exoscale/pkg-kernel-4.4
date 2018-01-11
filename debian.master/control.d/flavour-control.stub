@@ -68,6 +68,18 @@ Description: Linux kernel extra modules for version PKGVER on DESC
  the linux-FLAVOUR meta-package, which will ensure that upgrades work
  correctly, and that supporting packages are also installed.
 
+Package: linux-image-FLAVOUR
+Build-Profiles: <!stage1>
+Architecture: all
+Section: devel
+Priority: optional
+Depends: linux-image-PKGVER-ABINUM-FLAVOUR, linux-image-extra-PKGVER-ABINUM-FLAVOUR, linux-firmware
+Description: Latest Linux FLAVOUR kernel image
+ This package depends on the latest FLAVOUR Linux kernel
+ for ARCH.
+ .
+ This is a metapackage.
+
 Package: linux-headers-PKGVER-ABINUM-FLAVOUR
 Build-Profiles: <!stage1>
 Architecture: ARCH
@@ -81,6 +93,18 @@ Description: Linux kernel headers for version PKGVER on DESC
  .
  This is for sites that want the latest kernel headers.  Please read
  /usr/share/doc/linux-headers-PKGVER-ABINUM/debian.README.gz for details.
+
+Package: linux-headers-FLAVOUR
+Build-Profiles: <!stage1>
+Architecture: all
+Section: devel
+Priority: optional
+Depends: linux-headers-PKGVER-ABINUM-FLAVOUR
+Description: Latest Linux FLAVOUR kernel headers
+ This package depends on the latest FLAVOUR kernel header files
+ for ARCH.
+ .
+ This is a metapackage.
 
 Package: linux-image-PKGVER-ABINUM-FLAVOUR-dbgsym
 Build-Profiles: <!stage1>
