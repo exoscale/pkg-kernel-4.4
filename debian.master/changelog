@@ -1,4 +1,4 @@
-linux (4.4.0-109.132~exo2) xenial; urgency=low
+linux (4.4.0-109.132+exo3) xenial; urgency=low
 
   [ Marcelo Henrique Cerri ]
   * linux: 4.4.0-109.132 -proposed tracker (LP: #1742252)

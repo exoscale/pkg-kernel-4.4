@@ -70,7 +70,7 @@ Description: Linux kernel extra modules for version PKGVER on DESC
 
 Package: linux-image-FLAVOUR
 Build-Profiles: <!stage1>
-Architecture: all
+Architecture: ARCH
 Section: devel
 Priority: optional
 Depends: linux-image-PKGVER-ABINUM-FLAVOUR, linux-image-extra-PKGVER-ABINUM-FLAVOUR, linux-firmware
@@ -96,7 +96,7 @@ Description: Linux kernel headers for version PKGVER on DESC
 
 Package: linux-headers-FLAVOUR
 Build-Profiles: <!stage1>
-Architecture: all
+Architecture: ARCH
 Section: devel
 Priority: optional
 Depends: linux-headers-PKGVER-ABINUM-FLAVOUR

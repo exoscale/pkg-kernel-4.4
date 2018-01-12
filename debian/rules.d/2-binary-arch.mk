@@ -729,6 +729,11 @@ binary-arch-deps-$(do_libc_dev_package) += binary-arch-headers
 ifneq ($(do_common_headers_indep),true)
 binary-arch-deps-$(do_flavour_header_package) += binary-headers
 endif
-binary-arch: $(binary-arch-deps-true)
+binary-arch: $(binary-arch-deps-true) binary-meta
 	@echo Debug: $@
 
+binary-meta: $(addprefix binary-meta-,$(flavours))
+binary-meta-%:
+	$(lockme) dh_gencontrol -plinux-headers-$* -plinux-image-$* -- -v$(release).$(revision)
+	dh_md5sums -plinux-headers-$* -plinux-image-$*
+	dh_builddeb -plinux-headers-$* -plinux-image-$*

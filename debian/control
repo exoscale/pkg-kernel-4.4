@@ -228,7 +228,7 @@ Description: Linux kernel extra modules for version 4.4.0 on 64 bit x86 SMP
 
 Package: linux-image-generic
 Build-Profiles: <!stage1>
-Architecture: all
+Architecture: i386 amd64 armhf arm64 ppc64el s390x
 Section: devel
 Priority: optional
 Depends: linux-image-4.4.0-109-generic, linux-image-extra-4.4.0-109-generic, linux-firmware
@@ -254,7 +254,7 @@ Description: Linux kernel headers for version 4.4.0 on 64 bit x86 SMP
 
 Package: linux-headers-generic
 Build-Profiles: <!stage1>
-Architecture: all
+Architecture: i386 amd64 armhf arm64 ppc64el s390x
 Section: devel
 Priority: optional
 Depends: linux-headers-4.4.0-109-generic
@@ -364,7 +364,7 @@ Description: Linux kernel extra modules for version 4.4.0 on 64 bit x86 SMP
 
 Package: linux-image-generic-lpae
 Build-Profiles: <!stage1>
-Architecture: all
+Architecture: armhf
 Section: devel
 Priority: optional
 Depends: linux-image-4.4.0-109-generic-lpae, linux-image-extra-4.4.0-109-generic-lpae, linux-firmware
@@ -390,7 +390,7 @@ Description: Linux kernel headers for version 4.4.0 on 64 bit x86 SMP
 
 Package: linux-headers-generic-lpae
 Build-Profiles: <!stage1>
-Architecture: all
+Architecture: armhf
 Section: devel
 Priority: optional
 Depends: linux-headers-4.4.0-109-generic-lpae
@@ -500,7 +500,7 @@ Description: Linux kernel extra modules for version 4.4.0 on 64 bit x86 SMP
 
 Package: linux-image-lowlatency
 Build-Profiles: <!stage1>
-Architecture: all
+Architecture: i386 amd64
 Section: devel
 Priority: optional
 Depends: linux-image-4.4.0-109-lowlatency, linux-image-extra-4.4.0-109-lowlatency, linux-firmware
@@ -526,7 +526,7 @@ Description: Linux kernel headers for version 4.4.0 on 64 bit x86 SMP
 
 Package: linux-headers-lowlatency
 Build-Profiles: <!stage1>
-Architecture: all
+Architecture: i386 amd64
 Section: devel
 Priority: optional
 Depends: linux-headers-4.4.0-109-lowlatency
@@ -636,7 +636,7 @@ Description: Linux kernel extra modules for version 4.4.0 on 32-bit Freescale Po
 
 Package: linux-image-powerpc-e500mc
 Build-Profiles: <!stage1>
-Architecture: all
+Architecture: powerpc
 Section: devel
 Priority: optional
 Depends: linux-image-4.4.0-109-powerpc-e500mc, linux-image-extra-4.4.0-109-powerpc-e500mc, linux-firmware
@@ -662,7 +662,7 @@ Description: Linux kernel headers for version 4.4.0 on 32-bit Freescale Power e5
 
 Package: linux-headers-powerpc-e500mc
 Build-Profiles: <!stage1>
-Architecture: all
+Architecture: powerpc
 Section: devel
 Priority: optional
 Depends: linux-headers-4.4.0-109-powerpc-e500mc
@@ -772,7 +772,7 @@ Description: Linux kernel extra modules for version 4.4.0 on 32-bit PowerPC SMP
 
 Package: linux-image-powerpc-smp
 Build-Profiles: <!stage1>
-Architecture: all
+Architecture: powerpc
 Section: devel
 Priority: optional
 Depends: linux-image-4.4.0-109-powerpc-smp, linux-image-extra-4.4.0-109-powerpc-smp, linux-firmware
@@ -798,7 +798,7 @@ Description: Linux kernel headers for version 4.4.0 on 32-bit PowerPC SMP
 
 Package: linux-headers-powerpc-smp
 Build-Profiles: <!stage1>
-Architecture: all
+Architecture: powerpc
 Section: devel
 Priority: optional
 Depends: linux-headers-4.4.0-109-powerpc-smp
@@ -908,7 +908,7 @@ Description: Linux kernel extra modules for version 4.4.0 on 64-bit PowerPC SMP 
 
 Package: linux-image-powerpc64-emb
 Build-Profiles: <!stage1>
-Architecture: all
+Architecture: powerpc
 Section: devel
 Priority: optional
 Depends: linux-image-4.4.0-109-powerpc64-emb, linux-image-extra-4.4.0-109-powerpc64-emb, linux-firmware
@@ -934,7 +934,7 @@ Description: Linux kernel headers for version 4.4.0 on 64-bit PowerPC SMP Book3E
 
 Package: linux-headers-powerpc64-emb
 Build-Profiles: <!stage1>
-Architecture: all
+Architecture: powerpc
 Section: devel
 Priority: optional
 Depends: linux-headers-4.4.0-109-powerpc64-emb
@@ -1044,7 +1044,7 @@ Description: Linux kernel extra modules for version 4.4.0 on 64-bit PowerPC SMP
 
 Package: linux-image-powerpc64-smp
 Build-Profiles: <!stage1>
-Architecture: all
+Architecture: powerpc
 Section: devel
 Priority: optional
 Depends: linux-image-4.4.0-109-powerpc64-smp, linux-image-extra-4.4.0-109-powerpc64-smp, linux-firmware
@@ -1070,7 +1070,7 @@ Description: Linux kernel headers for version 4.4.0 on 64-bit PowerPC SMP
 
 Package: linux-headers-powerpc64-smp
 Build-Profiles: <!stage1>
-Architecture: all
+Architecture: powerpc
 Section: devel
 Priority: optional
 Depends: linux-headers-4.4.0-109-powerpc64-smp
