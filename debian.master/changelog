@@ -1,5 +1,6 @@
-linux (4.4.0-110.133) xenial; urgency=low
+linux (4.4.0-110.133+exo1) xenial; urgency=low
 
+  [ Marcelo Henrique Cerri ]
   * linux: 4.4.0-110.133 -proposed tracker (LP: #1742995)
 
   * CVE-2017-5753
@@ -180,7 +181,13 @@ linux (4.4.0-110.133) xenial; urgency=low
     - SAUCE: rfi-flush: Fix some RFI conversions in the KVM code
     - SAUCE: UBUNTU: [Config] Disable CONFIG_PPC_DEBUG_RFI
 
- -- Marcelo Henrique Cerri <marcelo.cerri@canonical.com>  Fri, 12 Jan 2018 14:47:54 -0200
+  [ Vincent Bernat ]
+  * Build for Exoscale.
+  * Remove IBRS/IPBP/KVM patchset from SuSE (use Canonical one).
+  * Add two patches to enable AVX512DQ/BW/VL.
+  * Provides linux-image-generic and linux-headers-generic metapackages.
+
+ -- Vincent Bernat <bernat@debian.org>  Sat, 13 Jan 2018 10:39:52 +0100
 
 linux (4.4.0-109.132) xenial; urgency=low
 
