@@ -734,6 +734,11 @@ binary-arch: $(binary-arch-deps-true) binary-meta
 
 binary-meta: $(addprefix binary-meta-,$(flavours))
 binary-meta-%:
+	dh_installchangelogs -plinux-headers-$* -plinux-image-$*
+	dh_installdocs -plinux-headers-$* -plinux-image-$*
+	dh_compress -plinux-headers-$* -plinux-image-$*
+	dh_fixperms -plinux-headers-$* -plinux-image-$*
+	dh_installdeb -plinux-headers-$* -plinux-image-$*
 	$(lockme) dh_gencontrol -plinux-headers-$* -plinux-image-$* -- -v$(release).$(revision)
 	dh_md5sums -plinux-headers-$* -plinux-image-$*
 	dh_builddeb -plinux-headers-$* -plinux-image-$*
