@@ -1,4 +1,4 @@
-linux (4.4.0-110.133+exo1) xenial; urgency=low
+linux (4.4.0-110.133+exo2) xenial; urgency=low
 
   [ Marcelo Henrique Cerri ]
   * linux: 4.4.0-110.133 -proposed tracker (LP: #1742995)
@@ -184,6 +184,7 @@ linux (4.4.0-110.133+exo1) xenial; urgency=low
   [ Vincent Bernat ]
   * Build for Exoscale.
   * Remove IBRS/IPBP/KVM patchset from SuSE (use Canonical one).
+  * Add corrective patchs to expose IBRS to guests.
   * Add two patches to enable AVX512DQ/BW/VL.
   * Provides linux-image-generic and linux-headers-generic metapackages.
 

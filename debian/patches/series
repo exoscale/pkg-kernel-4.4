@@ -1,2 +1,6 @@
 avx512/01-x86-cpufeature-enable-new-avx-512-features.patch
 avx512/02-kvm-x86-expose-more-intel-avx512-feature-to-guest.patch
+
+ibrs+kvm/0001-Revert-KVM-x86-Add-speculative-control-CPUID-support.patch
+ibrs+kvm/0002-kvm-x86-add-speculative-control-cpuid-support-for-guests.patch
+ibrs+kvm/0003-x86-provide-get-scattered-cpuid-leaf.patch
