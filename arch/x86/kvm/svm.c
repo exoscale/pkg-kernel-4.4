@@ -3897,7 +3897,10 @@ static void svm_vcpu_run(struct kvm_vcpu *vcpu)
 		"mov %%r14, %c[r14](%[svm]) \n\t"
 		"mov %%r15, %c[r15](%[svm]) \n\t"
 #endif
-		/* Clear host registers (marked as clobbered so it's safe) */
+		/*
+		* Clear host registers marked as clobbered to prevent
+		* speculative use.
+		*/
 		"xor %%" _ASM_BX ", %%" _ASM_BX " \n\t"
 		"xor %%" _ASM_CX ", %%" _ASM_CX " \n\t"
 		"xor %%" _ASM_DX ", %%" _ASM_DX " \n\t"
