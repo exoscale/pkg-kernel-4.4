@@ -1,4 +1,4 @@
-linux (4.4.0-112.135) xenial; urgency=low
+linux (4.4.0-112.135+exo1) xenial; urgency=low
 
   [ Stefan Bader ]
   * linux: 4.4.0-112.135 -proposed tracker (LP: #1744244)
