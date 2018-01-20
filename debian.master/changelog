@@ -1,6 +1,26 @@
-linux (4.4.0-111.134+exo1) xenial; urgency=low
+linux (4.4.0-112.135) xenial; urgency=low
 
-  [ Kleber Sacilotto de Souza ]
+  [ Stefan Bader ]
+  * linux: 4.4.0-112.135 -proposed tracker (LP: #1744244)
+
+  * CVE-2017-5715 // CVE-2017-5753
+    - x86/cpuid: Provide get_scattered_cpuid_leaf()
+    - SAUCE: Fix spec_ctrl support in KVM
+    - SAUCE: s390: improve cpu alternative handling for gmb and nobp
+    - SAUCE: s390: print messages for gmb and nobp
+    - [Config] KERNEL_NOBP=y
+
+  [ Vincent Bernat ]
+  * Build for Exoscale.
+  * Remove IBRS/IPBP/KVM patchset from SuSE (use Canonical one).
+  * Add corrective patchs to expose IBRS to guests.
+  * Add two patches to enable AVX512DQ/BW/VL.
+  * Provides linux-image-generic and linux-headers-generic metapackages.
+
+ -- Vincent Bernat <bernat@debian.org>  Sat, 20 Jan 2018 08:51:04 +0100
+
+linux (4.4.0-111.134) xenial; urgency=low
+
   * linux: 4.4.0-111.134 -proposed tracker (LP: #1743362)
 
   * Do not duplicate changelog entries assigned to more than one bug or CVE
@@ -16,14 +36,7 @@ linux (4.4.0-111.134+exo1) xenial; urgency=low
   * CVE-2017-5754
     - SAUCE: powerpc: use sync instead of hwsync mnemonic
 
-  [ Vincent Bernat ]
-  * Build for Exoscale.
-  * Remove IBRS/IPBP/KVM patchset from SuSE (use Canonical one).
-  * Add corrective patchs to expose IBRS to guests.
-  * Add two patches to enable AVX512DQ/BW/VL.
-  * Provides linux-image-generic and linux-headers-generic metapackages.
-
- -- Vincent Bernat <bernat@debian.org>  Mon, 15 Jan 2018 18:02:23 +0100
+ -- Kleber Sacilotto de Souza <kleber.souza@canonical.com>  Mon, 15 Jan 2018 15:05:02 +0100
 
 linux (4.4.0-110.133) xenial; urgency=low
 
