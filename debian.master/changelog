@@ -1,5 +1,6 @@
-linux (4.4.0-115.139) xenial; urgency=medium
+linux (4.4.0-115.139+exo1) xenial; urgency=medium
 
+  [ Andy Whitcroft ]
   * linux: 4.4.0-115.138 -proposed tracker (LP: #1748745)
 
   * CVE-2017-5715 (Spectre v2 Intel)
@@ -8,7 +9,12 @@ linux (4.4.0-115.139) xenial; urgency=medium
     - [Packaging] retpoline files must be sorted
     - [Packaging] pull in retpoline files
 
- -- Andy Whitcroft <apw@canonical.com>  Sun, 11 Feb 2018 11:52:42 +0000
+  [ Vincent Bernat ]
+  * Build for Exoscale.
+  * Add two patches to enable AVX512DQ/BW/VL.
+  * Provides linux-image-generic and linux-headers-generic metapackages.
+
+ -- Vincent Bernat <bernat@debian.org>  Mon, 12 Feb 2018 16:00:39 +0100
 
 linux (4.4.0-114.137) xenial; urgency=medium
 
