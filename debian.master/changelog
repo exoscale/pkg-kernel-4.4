@@ -13,8 +13,9 @@ linux (4.4.0-115.139+exo1) xenial; urgency=medium
   * Build for Exoscale.
   * Add two patches to enable AVX512DQ/BW/VL.
   * Provides linux-image-generic and linux-headers-generic metapackages.
+  * Enforce use of retpoline-enabled gcc.
 
- -- Vincent Bernat <bernat@debian.org>  Mon, 12 Feb 2018 16:00:39 +0100
+ -- Vincent Bernat <bernat@debian.org>  Tue, 13 Feb 2018 17:18:20 +0100
 
 linux (4.4.0-114.137) xenial; urgency=medium
 
