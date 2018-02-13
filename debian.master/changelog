@@ -1,4 +1,4 @@
-linux (4.4.0-116.140) xenial; urgency=medium
+linux (4.4.0-116.140+exo1) xenial; urgency=medium
 
   [ Khalid Elmously ]
   * linux: 4.4.0-116.140 -proposed tracker (LP: #1748990)
