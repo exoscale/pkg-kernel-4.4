@@ -1,4 +1,22 @@
-linux (4.4.0-115.139+exo1) xenial; urgency=medium
+linux (4.4.0-116.140) xenial; urgency=medium
+
+  [ Khalid Elmously ]
+  * linux: 4.4.0-116.140 -proposed tracker (LP: #1748990)
+
+  * BUG: unable to handle kernel NULL pointer dereference at 0000000000000009
+    (LP: #1748671)
+    - SAUCE: net: ipv4: fix for a race condition in raw_sendmsg -- fix backport
+
+
+  [ Vincent Bernat ]
+  * Build for Exoscale.
+  * Add two patches to enable AVX512DQ/BW/VL.
+  * Provides linux-image-generic and linux-headers-generic metapackages.
+  * Enforce use of retpoline-enabled gcc.
+
+ -- Vincent Bernat <bernat@debian.org>  Tue, 13 Feb 2018 17:56:57 +0100
+
+linux (4.4.0-115.139) xenial; urgency=medium
 
   [ Andy Whitcroft ]
   * linux: 4.4.0-115.138 -proposed tracker (LP: #1748745)
@@ -8,12 +26,6 @@ linux (4.4.0-115.139+exo1) xenial; urgency=medium
     - SAUCE: turn off IBRS when full retpoline is present
     - [Packaging] retpoline files must be sorted
     - [Packaging] pull in retpoline files
-
-  [ Vincent Bernat ]
-  * Build for Exoscale.
-  * Add two patches to enable AVX512DQ/BW/VL.
-  * Provides linux-image-generic and linux-headers-generic metapackages.
-  * Enforce use of retpoline-enabled gcc.
 
  -- Vincent Bernat <bernat@debian.org>  Tue, 13 Feb 2018 17:18:20 +0100
 
