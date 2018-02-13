@@ -72,6 +72,8 @@ ifeq ($(do_mainline_build),true)
 	skipretpoline=true
 endif
 
+skipretpoline=true
+
 # Disable tools build and packaging if do_tools != true
 ifneq ($(do_tools),true)
 	do_linux_tools=
