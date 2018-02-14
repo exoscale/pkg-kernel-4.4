@@ -7,11 +7,12 @@ linux (4.4.0-116.140+exo1) xenial; urgency=medium
     (LP: #1748671)
     - SAUCE: net: ipv4: fix for a race condition in raw_sendmsg -- fix backport
 
+
   [ Vincent Bernat ]
   * Build for Exoscale.
   * Add two patches to enable AVX512DQ/BW/VL.
   * Provides linux-image-generic and linux-headers-generic metapackages.
-  * Enforce use of retpoline-enabled gcc. Skip retpoline check.
+  * Enforce use of retpoline-enabled gcc.
 
  -- Vincent Bernat <bernat@debian.org>  Tue, 13 Feb 2018 17:56:57 +0100
 
