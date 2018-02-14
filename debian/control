@@ -5,7 +5,7 @@ Maintainer: Ubuntu Kernel Team <kernel-team@lists.ubuntu.com>
 Standards-Version: 3.9.4.0
 Build-Depends:
  debhelper (>= 5),
- gcc (>= 5.4.0-6ubuntu1~16.04.9),
+ gcc-5 (>= 5.4.0-6ubuntu1~16.04.9),
  dh-systemd,
  cpio,
  quilt,

@@ -1,4 +1,4 @@
-linux (4.4.0-116.140+exo1) xenial; urgency=medium
+linux (4.4.0-116.140+exo2) xenial; urgency=medium
 
   [ Khalid Elmously ]
   * linux: 4.4.0-116.140 -proposed tracker (LP: #1748990)
@@ -6,7 +6,6 @@ linux (4.4.0-116.140+exo1) xenial; urgency=medium
   * BUG: unable to handle kernel NULL pointer dereference at 0000000000000009
     (LP: #1748671)
     - SAUCE: net: ipv4: fix for a race condition in raw_sendmsg -- fix backport
-
 
   [ Vincent Bernat ]
   * Build for Exoscale.

@@ -1,4 +1,4 @@
-linux (4.4.0-116.140+exo1) xenial; urgency=medium
+linux (4.4.0-116.140+exo2) xenial; urgency=medium
 
   [ Khalid Elmously ]
   * linux: 4.4.0-116.140 -proposed tracker (LP: #1748990)
@@ -11,7 +11,7 @@ linux (4.4.0-116.140+exo1) xenial; urgency=medium
   * Build for Exoscale.
   * Add two patches to enable AVX512DQ/BW/VL.
   * Provides linux-image-generic and linux-headers-generic metapackages.
-  * Enforce use of retpoline-enabled gcc. Skip retpoline check.
+  * Enforce use of retpoline-enabled gcc.
 
  -- Vincent Bernat <bernat@debian.org>  Tue, 13 Feb 2018 17:56:57 +0100
 
