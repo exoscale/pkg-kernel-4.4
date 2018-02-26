@@ -1,4 +1,4 @@
-linux (4.4.0-116.140+exo2) xenial; urgency=medium
+linux (4.4.0-116.140+exo3) xenial; urgency=medium
 
   [ Khalid Elmously ]
   * linux: 4.4.0-116.140 -proposed tracker (LP: #1748990)
@@ -12,8 +12,9 @@ linux (4.4.0-116.140+exo2) xenial; urgency=medium
   * Add two patches to enable AVX512DQ/BW/VL.
   * Provides linux-image-generic and linux-headers-generic metapackages.
   * Enforce use of retpoline-enabled gcc.
+  * Add a performance patch for KVM.
 
- -- Vincent Bernat <bernat@debian.org>  Tue, 13 Feb 2018 17:56:57 +0100
+ -- Vincent Bernat <bernat@debian.org>  Mon, 26 Feb 2018 14:34:22 +0100
 
 linux (4.4.0-115.139) xenial; urgency=medium
 
