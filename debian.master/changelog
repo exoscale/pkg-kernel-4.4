@@ -1,11 +1,18 @@
-linux (4.4.0-119.143) xenial; urgency=medium
+linux (4.4.0-119.143+exo1) xenial; urgency=medium
 
+  [ Khalid Elmously ]
   * linux: 4.4.0-119.143 -proposed tracker (LP: #1760327)
 
   * Dell XPS 13 9360 bluetooth scan can not detect any device (LP: #1759821)
     - Revert "Bluetooth: btusb: fix QCA Rome suspend/resume"
 
- -- Khalid Elmously <khalid.elmously@canonical.com>  Sat, 31 Mar 2018 17:09:19 +0000
+  [ Vincent Bernat ]
+  * Build for Exoscale.
+  * Add two patches to enable AVX512DQ/BW/VL.
+  * Provides linux-image-generic and linux-headers-generic metapackages.
+  * Enforce use of retpoline-enabled gcc.
+
+ -- Vincent Bernat <bernat@debian.org>  Fri, 06 Apr 2018 11:52:01 +0200
 
 linux (4.4.0-118.142) xenial; urgency=medium
 
