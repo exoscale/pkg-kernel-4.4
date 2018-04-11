@@ -1,4 +1,4 @@
-linux (4.4.0-119.143+exo1) xenial; urgency=medium
+linux (4.4.0-119.143+exo2) xenial; urgency=medium
 
   [ Khalid Elmously ]
   * linux: 4.4.0-119.143 -proposed tracker (LP: #1760327)
@@ -11,6 +11,7 @@ linux (4.4.0-119.143+exo1) xenial; urgency=medium
   * Add two patches to enable AVX512DQ/BW/VL.
   * Provides linux-image-generic and linux-headers-generic metapackages.
   * Enforce use of retpoline-enabled gcc.
+  * Don't skip debug packages.
 
  -- Vincent Bernat <bernat@debian.org>  Fri, 06 Apr 2018 11:52:01 +0200
 
