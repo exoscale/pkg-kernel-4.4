@@ -1,2 +1,4 @@
 avx512/01-x86-cpufeature-enable-new-avx-512-features.patch
 avx512/02-kvm-x86-expose-more-intel-avx512-feature-to-guest.patch
+
+0001-Disable-IBRS-in-VMX-even-if-VM-request-it.patch

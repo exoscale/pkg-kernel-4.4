@@ -1,4 +1,4 @@
-linux (4.4.0-119.143+exo2) xenial; urgency=medium
+linux (4.4.0-119.143+exo3) xenial; urgency=medium
 
   [ Khalid Elmously ]
   * linux: 4.4.0-119.143 -proposed tracker (LP: #1760327)
@@ -12,8 +12,9 @@ linux (4.4.0-119.143+exo2) xenial; urgency=medium
   * Provides linux-image-generic and linux-headers-generic metapackages.
   * Enforce use of retpoline-enabled gcc.
   * Don't skip debug packages.
+  * Add a patch to forbid IBRS MSR to VM.
 
- -- Vincent Bernat <bernat@debian.org>  Fri, 06 Apr 2018 11:52:01 +0200
+ -- Vincent Bernat <bernat@debian.org>  Thu, 12 Apr 2018 11:57:57 +0200
 
 linux (4.4.0-118.142) xenial; urgency=medium
 
