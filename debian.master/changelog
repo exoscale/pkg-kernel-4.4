@@ -20,7 +20,7 @@ linux (4.4.0-124.148+exo1) xenial; urgency=medium
 
  -- Vincent Bernat <bernat@debian.org>  Wed, 16 May 2018 11:23:23 +0200
 
-linux (4.4.0-122.146+exo1) xenial; urgency=medium
+linux (4.4.0-122.146) xenial; urgency=medium
 
   [ Stefan Bader ]
   * linux: 4.4.0-122.146 -proposed tracker (LP: #1766264)
