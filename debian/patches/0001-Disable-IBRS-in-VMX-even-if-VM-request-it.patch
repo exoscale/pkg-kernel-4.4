@@ -14,37 +14,37 @@ calling for firmwares.
  kernel/sysctl.c     | 9 +++++++++
  3 files changed, 12 insertions(+), 1 deletion(-)
 
-diff --git a/arch/x86/kvm/vmx.c b/arch/x86/kvm/vmx.c
-index 390d2b5141ff..afd811d68935 100644
---- a/arch/x86/kvm/vmx.c
-+++ b/arch/x86/kvm/vmx.c
-@@ -2924,7 +2924,8 @@ static int vmx_set_msr(struct kvm_vcpu *vcpu, struct msr_data *msr_info)
- 		kvm_write_tsc(vcpu, msr_info);
- 		break;
- 	case MSR_IA32_SPEC_CTRL:
--		vcpu->arch.spec_ctrl = msr_info->data;
+Index: pkg-kernel-4.4/arch/x86/kvm/vmx.c
+===================================================================
+--- pkg-kernel-4.4.orig/arch/x86/kvm/vmx.c
++++ pkg-kernel-4.4/arch/x86/kvm/vmx.c
+@@ -2940,7 +2940,8 @@ static int vmx_set_msr(struct kvm_vcpu *
+ 		if (data & ~(SPEC_CTRL_IBRS | SPEC_CTRL_STIBP | SPEC_CTRL_SSBD))
+ 			return 1;
+ 
+-		vcpu->arch.spec_ctrl = data;
 +		if (!sysctl_ibrs_vmx_forbidden)
-+			vcpu->arch.spec_ctrl = msr_info->data;
++			vcpu->arch.spec_ctrl = data;
  		break;
  	case MSR_IA32_CR_PAT:
  		if (vmcs_config.vmentry_ctrl & VM_ENTRY_LOAD_IA32_PAT) {
-diff --git a/include/linux/smp.h b/include/linux/smp.h
-index 3689de249d0c..d5adf5c47de3 100644
---- a/include/linux/smp.h
-+++ b/include/linux/smp.h
-@@ -54,6 +54,7 @@ int smp_call_function_single_async(int cpu, struct call_single_data *csd);
+Index: pkg-kernel-4.4/include/linux/smp.h
+===================================================================
+--- pkg-kernel-4.4.orig/include/linux/smp.h
++++ pkg-kernel-4.4/include/linux/smp.h
+@@ -59,6 +59,7 @@ int smp_call_function_single_async(int c
  /* indicate usage of IBRS to control execution speculation */
  extern int use_ibrs;
  extern u32 sysctl_ibrs_enabled;
 +extern u32 sysctl_ibrs_vmx_forbidden;
  extern struct mutex spec_ctrl_mutex;
- #define ibrs_supported		(use_ibrs & 0x2)
- #define ibrs_disabled		(use_ibrs & 0x4)
-diff --git a/kernel/sysctl.c b/kernel/sysctl.c
-index 8a236ede02a5..ab3520c5bb11 100644
---- a/kernel/sysctl.c
-+++ b/kernel/sysctl.c
-@@ -250,6 +250,8 @@ u32 sysctl_ibrs_enabled = 0;
+ 
+ static inline int __check_ibrs_inuse(void)
+Index: pkg-kernel-4.4/kernel/sysctl.c
+===================================================================
+--- pkg-kernel-4.4.orig/kernel/sysctl.c
++++ pkg-kernel-4.4/kernel/sysctl.c
+@@ -248,6 +248,8 @@ u32 sysctl_ibrs_enabled = 0;
  EXPORT_SYMBOL(sysctl_ibrs_enabled);
  u32 sysctl_ibpb_enabled = 0;
  EXPORT_SYMBOL(sysctl_ibpb_enabled);
@@ -53,20 +53,17 @@ index 8a236ede02a5..ab3520c5bb11 100644
  
  /* The default sysctl tables: */
  
-@@ -1245,6 +1247,13 @@ static struct ctl_table kern_table[] = {
- 		.extra1         = &zero,
+@@ -1244,6 +1246,13 @@ static struct ctl_table kern_table[] = {
  		.extra2         = &two,
  	},
-+	{
+ 	{
 +		.procname       = "ibrs_vmx_forbidden",
 +		.data           = &sysctl_ibrs_vmx_forbidden,
 +		.maxlen         = sizeof(unsigned int),
 +		.mode           = 0644,
 +		.proc_handler	= proc_dointvec,
 +	},
- 	{
++	{
  		.procname       = "ibpb_enabled",
  		.data           = &sysctl_ibpb_enabled,
--- 
-2.17.0
-
+ 		.maxlen         = sizeof(unsigned int),

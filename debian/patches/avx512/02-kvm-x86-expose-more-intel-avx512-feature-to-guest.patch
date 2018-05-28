@@ -20,10 +20,10 @@ Acked-by: Bruce Rogers <brogers@suse.com>
  arch/x86/kvm/cpuid.c | 3 ++-
  1 file changed, 2 insertions(+), 1 deletion(-)
 
-Index: kernel/arch/x86/kvm/cpuid.c
+Index: pkg-kernel-4.4/arch/x86/kvm/cpuid.c
 ===================================================================
---- kernel.orig/arch/x86/kvm/cpuid.c
-+++ kernel/arch/x86/kvm/cpuid.c
+--- pkg-kernel-4.4.orig/arch/x86/kvm/cpuid.c
++++ pkg-kernel-4.4/arch/x86/kvm/cpuid.c
 @@ -355,7 +355,8 @@ static inline int __do_cpuid_ent(struct
  		F(FSGSBASE) | F(BMI1) | F(HLE) | F(AVX2) | F(SMEP) |
  		F(BMI2) | F(ERMS) | f_invpcid | F(RTM) | f_mpx | F(RDSEED) |
@@ -32,5 +32,5 @@ Index: kernel/arch/x86/kvm/cpuid.c
 +		F(AVX512CD) | F(CLFLUSHOPT) | F(CLWB) | F(AVX512DQ) |
 +		F(AVX512BW) | F(AVX512VL) | F(PCOMMIT);
  
- 	/* cpuid 0xD.1.eax */
- 	const u32 kvm_supported_word10_x86_features =
+ 	/* cpuid 7.0.edx */
+ 	const u32 kvm_supported_7_0_edx_x86_features =
