@@ -1,0 +1,65 @@
+From 7597b266c56feaad7d4e6e65822766e929407da2 Mon Sep 17 00:00:00 2001
+From: Nikolay Aleksandrov <nikolay@cumulusnetworks.com>
+Date: Mon, 3 Jul 2017 15:14:59 -0700
+Subject: [PATCH] bridge: allow ext learned entries to change ports
+
+current code silently ignores change of port in the request
+message. This patch makes sure the port is modified and
+notification is sent to userspace.
+
+Fixes: cf6b8e1eedff ("bridge: add API to notify bridge driver of learned FBD on offloaded device")
+Signed-off-by: Nikolay Aleksandrov <nikolay@cumulusnetworks.com>
+Signed-off-by: Roopa Prabhu <roopa@cumulusnetworks.com>
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ net/bridge/br_fdb.c | 28 ++++++++++++++++++++--------
+ 1 file changed, 20 insertions(+), 8 deletions(-)
+
+Index: pkg-kernel-4.4/net/bridge/br_fdb.c
+===================================================================
+--- pkg-kernel-4.4.orig/net/bridge/br_fdb.c
++++ pkg-kernel-4.4/net/bridge/br_fdb.c
+@@ -1092,8 +1092,9 @@ void br_fdb_unsync_static(struct net_bri
+ int br_fdb_external_learn_add(struct net_bridge *br, struct net_bridge_port *p,
+ 			      const unsigned char *addr, u16 vid)
+ {
+-	struct hlist_head *head;
+ 	struct net_bridge_fdb_entry *fdb;
++	struct hlist_head *head;
++	bool modified = false;
+ 	int err = 0;
+ 
+ 	ASSERT_RTNL();
+@@ -1109,14 +1110,25 @@ int br_fdb_external_learn_add(struct net
+ 		}
+ 		fdb->added_by_external_learn = 1;
+ 		fdb_notify(br, fdb, RTM_NEWNEIGH);
+-	} else if (fdb->added_by_external_learn) {
+-		/* Refresh entry */
+-		fdb->updated = fdb->used = jiffies;
+-	} else if (!fdb->added_by_user) {
+-		/* Take over SW learned entry */
+-		fdb->added_by_external_learn = 1;
++	} else {
+ 		fdb->updated = jiffies;
+-		fdb_notify(br, fdb, RTM_NEWNEIGH);
++
++		if (fdb->dst != p) {
++			fdb->dst = p;
++			modified = true;
++		}
++
++		if (fdb->added_by_external_learn) {
++			/* Refresh entry */
++			fdb->used = jiffies;
++		} else if (!fdb->added_by_user) {
++			/* Take over SW learned entry */
++			fdb->added_by_external_learn = 1;
++			modified = true;
++		}
++
++		if (modified)
++			fdb_notify(br, fdb, RTM_NEWNEIGH);
+ 	}
+ 
+ err_unlock:

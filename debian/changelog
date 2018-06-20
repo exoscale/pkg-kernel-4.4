@@ -1,4 +1,4 @@
-linux (4.4.0-128.154+exo1) xenial; urgency=medium
+linux (4.4.0-128.154+exo2) xenial; urgency=medium
 
   [ Stefan Bader ]
   * linux: 4.4.0-128.154 -proposed tracker (LP: #1772960)
@@ -290,6 +290,7 @@ linux (4.4.0-128.154+exo1) xenial; urgency=medium
   * Enforce use of retpoline-enabled gcc.
   * Don't skip debug packages.
   * Add a patch to forbid IBRS MSR to VM.
+  * Add a patch to fix handling of ext learned FDB entries.
 
  -- Vincent Bernat <bernat@debian.org>  Sun, 17 Jun 2018 14:48:58 +0200
 
