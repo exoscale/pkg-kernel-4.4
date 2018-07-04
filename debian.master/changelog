@@ -836,15 +836,6 @@ linux (4.4.0-128.154) xenial; urgency=medium
   * Acer Swift sf314-52 power button not managed  (LP: #1766054)
     - SAUCE: platform/x86: acer-wmi: add another KEY_POWER keycode
 
-  [ Vincent Bernat ]
-  * Build for Exoscale.
-  * Add two patches to enable AVX512DQ/BW/VL.
-  * Provides linux-image-generic and linux-headers-generic metapackages.
-  * Enforce use of retpoline-enabled gcc.
-  * Don't skip debug packages.
-  * Add a patch to forbid IBRS MSR to VM.
-  * Add a patch to fix handling of ext learned FDB entries.
-
  -- Vincent Bernat <bernat@debian.org>  Sun, 17 Jun 2018 14:48:58 +0200
 
 linux (4.4.0-127.153) xenial; urgency=medium
